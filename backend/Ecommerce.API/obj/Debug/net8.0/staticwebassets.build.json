@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "Hash": "zD8JbuEa0QZFwXiEwpwKUBRH2sdeJSeSPEbj4xKom8k=",
+  "Source": "Ecommerce.API",
+  "BasePath": "_content/Ecommerce.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "Ecommerce.API\\wwwroot",
+      "Source": "Ecommerce.API",
+      "ContentRoot": "C:\\Users\\alper\\Downloads\\scarwey-main (1)\\scarwey-main\\backend\\Ecommerce.API\\wwwroot\\",
+      "BasePath": "_content/Ecommerce.API",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\alper\\Downloads\\scarwey-main (1)\\scarwey-main\\backend\\Ecommerce.API\\wwwroot\\images\\products\\277a2270-cf3f-4fae-afc1-a56c6fb6b861.png",
+      "SourceId": "Ecommerce.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\alper\\Downloads\\scarwey-main (1)\\scarwey-main\\backend\\Ecommerce.API\\wwwroot\\",
+      "BasePath": "_content/Ecommerce.API",
+      "RelativePath": "images/products/277a2270-cf3f-4fae-afc1-a56c6fb6b861.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\products\\277a2270-cf3f-4fae-afc1-a56c6fb6b861.png"
+    },
+    {
+      "Identity": "C:\\Users\\alper\\Downloads\\scarwey-main (1)\\scarwey-main\\backend\\Ecommerce.API\\wwwroot\\images\\products\\aa593bcc-d5e0-4ca9-99ca-419eb41b582f.png",
+      "SourceId": "Ecommerce.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\alper\\Downloads\\scarwey-main (1)\\scarwey-main\\backend\\Ecommerce.API\\wwwroot\\",
+      "BasePath": "_content/Ecommerce.API",
+      "RelativePath": "images/products/aa593bcc-d5e0-4ca9-99ca-419eb41b582f.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\products\\aa593bcc-d5e0-4ca9-99ca-419eb41b582f.png"
+    }
+  ]
+}
