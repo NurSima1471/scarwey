@@ -583,7 +583,7 @@ const handleAddToCart = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-green-800">Ücretsiz Kargo</p>
-                    <p className="text-xs text-green-600">₺150 üzeri</p>
+                    <p className="text-xs text-green-600">₺1500 üzeri</p>
                   </div>
                 </div>
                 
@@ -618,10 +618,10 @@ const handleAddToCart = () => {
                   <FiCheck className="inline text-green-500 mr-1" size={14} />
                   Bugün sipariş verirseniz <strong>yarın kargoda</strong>
                 </p>
-                <p className="text-sm text-gray-600">
+               {/* <p className="text-sm text-gray-600">
                   <FiGift className="inline text-purple-500 mr-1" size={14} />
                   Hediye paketi seçeneği mevcut
-                </p>
+                </p>*/} 
               </div>
             </div>
 
@@ -649,6 +649,7 @@ const handleAddToCart = () => {
                   >
                     Ürün Özellikleri
                   </button>
+                  {/* 
                   <button
                     onClick={() => setActiveTab('reviews')}
                     className={`py-4 border-b-2 font-semibold transition-colors ${
@@ -658,9 +659,10 @@ const handleAddToCart = () => {
                     }`}
                   >
                     Değerlendirmeler (127)
-                  </button>
+                  </button>*/}
                 </nav>
               </div>
+              
 
               <div className="p-8">
                 {activeTab === 'description' && (

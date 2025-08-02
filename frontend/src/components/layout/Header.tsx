@@ -105,18 +105,18 @@ const Header: React.FC = () => {
         {/* Main Header */}
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
+          <Link to="/" className="flex items-center space-x-1 md:space-x-2 group flex-shrink-0">
             <img                  
               src="/swlogo.png"                  
               alt="Scarwey"                  
-              className="h-8 w-8 group-hover:scale-105 transition-transform duration-300"               
+              className="h-6 w-6 md:h-8 md:w-8 group-hover:scale-105 transition-transform duration-300"               
             />               
-            <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent">                 
+            <span className="text-lg md:text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent">                 
               Scarwey               
             </span>
           </Link>
 
-          {/* Search Bar - Center */}
+          {/* Desktop Search Bar - Center */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <form onSubmit={handleSearch} className="flex w-full">
               <div className="relative flex w-full">
@@ -137,13 +137,34 @@ const Header: React.FC = () => {
             </form>
           </div>
 
+          {/* Mobile Search Bar */}
+          <div className="md:hidden flex-1 mx-2">
+            <form onSubmit={handleSearch} className="flex w-full">
+              <div className="relative flex w-full">
+                <input
+                  type="text"
+                  placeholder="Ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-l-md focus:border-orange-500 focus:outline-none bg-gray-50 focus:bg-white transition-all"
+                />
+                <button
+                  type="submit"
+                  className="px-2 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-r-md hover:from-orange-600 hover:to-red-600 transition-all duration-300"
+                >
+                  <FiSearch size={14} />
+                </button>
+              </div>
+            </form>
+          </div>
+
           {/* Right Section */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-4 flex-shrink-0">
             {/* User Account */}
             <div className="relative group">
-              <button className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
-                  <FiUser className="text-white" size={16} />
+              <button className="flex items-center space-x-1 md:space-x-2 px-1 md:px-3 py-1 md:py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+                  <FiUser className="text-white" size={12} />
                 </div>
                 <div className="hidden lg:block text-left">
                   <div className="text-xs text-gray-500">
@@ -173,6 +194,27 @@ const Header: React.FC = () => {
                         <FiPackage className="mr-3 text-gray-400" size={16} />
                         Siparişlerim
                       </Link>
+                      <Link to="/wishlist" className="flex items-center px-4 py-3 text-sm hover:bg-gray-50 transition-colors">
+                        <FiHeart className="mr-3 text-gray-400" size={16} />
+                        Favorilerim
+                        {wishlistItems.length > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {wishlistItems.length}
+                          </span>
+                        )}
+                      </Link>
+                      <button
+                        onClick={() => dispatch(toggleCart())}
+                        className="flex items-center px-4 py-3 text-sm hover:bg-gray-50 transition-colors w-full text-left"
+                      >
+                        <FiShoppingCart className="mr-3 text-gray-400" size={16} />
+                        Sepetim
+                        {cartItemCount > 0 && (
+                          <span className="ml-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {cartItemCount}
+                          </span>
+                        )}
+                      </button>
                       {isAdmin() && (
                         <Link to="/admin/dashboard" className="flex items-center px-4 py-3 text-sm hover:bg-blue-50 text-blue-600 transition-colors">
                           <FiSettings className="mr-3 text-blue-500" size={16} />
@@ -208,7 +250,7 @@ const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* Wishlist */}
+            {/* Wishlist - Hidden on mobile to save space */}
             <Link to="/wishlist" className="relative p-2 hover:bg-gray-50 rounded-lg transition-colors hidden md:block">
               <FiHeart size={24} className="text-gray-600" />
               {wishlistItems.length > 0 && (
@@ -218,10 +260,10 @@ const Header: React.FC = () => {
               )}
             </Link>
 
-            {/* Cart */}
+            {/* Cart - Hidden on mobile to save space */}
             <button
               onClick={() => dispatch(toggleCart())}
-              className="relative p-2 hover:bg-gray-50 rounded-lg transition-colors"
+              className="relative p-2 hover:bg-gray-50 rounded-lg transition-colors hidden md:block"
             >
               <FiShoppingCart size={24} className="text-gray-600" />
               {cartItemCount > 0 && (
@@ -234,14 +276,14 @@ const Header: React.FC = () => {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-gray-50 rounded-lg transition-colors"
+              className="md:hidden p-1 hover:bg-gray-50 rounded-lg transition-colors"
             >
-              {isMobileMenuOpen ? <FiX size={24} className="text-gray-600" /> : <FiMenu size={24} className="text-gray-600" />}
+              {isMobileMenuOpen ? <FiX size={18} className="text-gray-600" /> : <FiMenu size={18} className="text-gray-600" />}
             </button>
           </div>
         </div>
 
-        {/* 🆕 YENİ DÜZEN: Alt Navigation - Kategoriler Sol Tarafta */}
+        {/* Desktop Navigation */}
         <nav className="hidden md:block border-t border-gray-100 py-4">
           <div className="flex items-center justify-between">
             <ul className="flex space-x-8 items-center">
@@ -281,6 +323,14 @@ const Header: React.FC = () => {
                 </Link>
               </li>
 
+              {/* 3. Tüm Ürünler */}
+              <li>
+                <Link to="/products" className="text-gray-700 hover:text-orange-600 font-medium transition-colors relative group">
+                  Tüm Ürünler
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+              </li>
+
               {/* 3. Gender Kategorileri */}
               {genderCategories.map((gender) => (
                 <li key={gender.id}>
@@ -312,20 +362,6 @@ const Header: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
           <div className="container mx-auto px-4 py-4">
-            {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="mb-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Ürün ara..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none bg-gray-50"
-                />
-                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              </div>
-            </form>
-
             {/* Mobile Navigation */}
             <div className="space-y-3">
               {/* Ana Sayfa */}
@@ -336,6 +372,16 @@ const Header: React.FC = () => {
               >
                 <span className="text-xl mr-3">🏠</span>
                 Ana Sayfa
+              </Link>
+
+              {/* Tüm Ürünler */}
+              <Link
+                to="/products"
+                className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="text-xl mr-3">📦</span>
+                Tüm Ürünler
               </Link>
 
               {/* Kategoriler */}
@@ -397,7 +443,41 @@ const Header: React.FC = () => {
                     {wishlistItems.length}
                   </span>
                 )}
+              </Link> {/* Mobile Wishlist */}
+              <Link
+                to="/wishlist"
+                className="flex items-center justify-between py-3 text-gray-700 hover:text-orange-600 transition-colors border-t border-gray-100 mt-4 pt-4"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="flex items-center">
+                  <FiHeart className="mr-3" size={20} />
+                  Favorilerim
+                </div>
+                {wishlistItems.length > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
               </Link>
+
+              {/* Mobile Cart */}
+              <button
+                onClick={() => {
+                  dispatch(toggleCart());
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-between py-3 text-gray-700 hover:text-orange-600 transition-colors w-full text-left"
+              >
+                <div className="flex items-center">
+                  <FiShoppingCart className="mr-3" size={20} />
+                  Sepetim
+                </div>
+                {cartItemCount > 0 && (
+                  <span className="bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
         </div>
