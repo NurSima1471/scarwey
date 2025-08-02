@@ -9,10 +9,11 @@ const FiTrash2 = Icons.FiTrash2 as any;
 const FiSearch = Icons.FiSearch as any;
 const FiX = Icons.FiX as any;
 const FiSave = Icons.FiSave as any;
-const FiAlertCircle = Icons.FiAlertCircle as any;
+const FiAlertTriangle = Icons.FiAlertTriangle as any;
 const FiRefreshCw = Icons.FiRefreshCw as any;
 const FiChevronDown = Icons.FiChevronDown as any;
 const FiChevronRight = Icons.FiChevronRight as any;
+const FiAlertCircle = Icons.FiAlertCircle as any;
 
 interface Category {
   id: number;
@@ -33,6 +34,18 @@ interface CategoryFormData {
   isActive: boolean;
 }
 
+// 🆕 Delete bilgi interface'i
+interface DeleteInfo {
+  categoryId: number;
+  categoryName: string;
+  directProductCount: number;
+  subCategoryCount: number;
+  subCategoryProductCount: number;
+  totalProductCount: number;
+  canDelete: boolean;
+  warning?: string;
+}
+
 const CategoryManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +56,14 @@ const CategoryManagement: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
+
+  // 🆕 Delete confirmation modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [deleteInfo, setDeleteInfo] = useState<DeleteInfo | null>(null);
+  const [loadingDeleteInfo, setLoadingDeleteInfo] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
@@ -67,13 +88,11 @@ const CategoryManagement: React.FC = () => {
       }
       setError(null);
 
-      // Tüm kategorileri getir (aktif + pasif) - backend'e eklenince kullanılacak
       try {
         const response = await api.get<Category[]>('/categories/admin/all');
         console.log('Admin API Response:', response.data);
         setCategories(response.data);
       } catch (adminError) {
-        // Admin endpoint yoksa normal endpoint'i kullan
         const response = await api.get<Category[]>('/categories');
         console.log('Fallback API Response:', response.data);
         setCategories(response.data);
@@ -89,6 +108,88 @@ const CategoryManagement: React.FC = () => {
 
   const handleRefresh = () => {
     fetchCategories(true);
+  };
+
+  // 🆕 Delete bilgilerini getir
+  const fetchDeleteInfo = async (categoryId: number): Promise<DeleteInfo | null> => {
+    try {
+      setLoadingDeleteInfo(true);
+      const response = await api.get<DeleteInfo>(`/categories/${categoryId}/delete-info`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching delete info:', error);
+      setError('Silme bilgileri alınırken hata oluştu');
+      return null;
+    } finally {
+      setLoadingDeleteInfo(false);
+    }
+  };
+
+  // 🆕 Delete modal'ını aç
+  const openDeleteModal = async (category: Category) => {
+    setDeletingCategory(category);
+    setIsDeleteModalOpen(true);
+    setConfirmText('');
+    
+    const info = await fetchDeleteInfo(category.id);
+    if (info) {
+      setDeleteInfo(info);
+    }
+  };
+
+  // 🆕 Delete modal'ını kapat
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingCategory(null);
+    setDeleteInfo(null);
+    setConfirmText('');
+  };
+
+  // 🆕 Kategori silme işlemi
+  const handleDeleteConfirm = async () => {
+    if (!deletingCategory || !deleteInfo) return;
+    
+    // Konfirmasyon metni kontrolü
+    const expectedText = deleteInfo.totalProductCount > 0 
+      ? `SİL ${deleteInfo.categoryName}` 
+      : deleteInfo.categoryName;
+    
+    if (confirmText !== expectedText) {
+      setError(`Lütfen "${expectedText}" yazın`);
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      setError(null);
+
+      console.log('🔥 Deleting category:', deletingCategory.name, 'ID:', deletingCategory.id);
+      
+      const response = await api.delete(`/categories/${deletingCategory.id}`);
+      
+      console.log('✅ Delete response:', response.data);
+      
+      // Local state'ten kaldır
+      setCategories(prevCategories => 
+        prevCategories.filter(cat => cat.id !== deletingCategory.id)
+      );
+      
+      closeDeleteModal();
+      
+      // Başarı mesajı göster
+      const successMessage = deleteInfo.totalProductCount > 0 
+        ? `"${deletingCategory.name}" kategorisi ve ${deleteInfo.totalProductCount} ürün kalıcı olarak silindi.`
+        : `"${deletingCategory.name}" kategorisi kalıcı olarak silindi.`;
+      
+      // Success toast göstermek için bir state ekleyebilirsiniz
+      console.log('✅ Success:', successMessage);
+      
+    } catch (error: any) {
+      console.error('❌ Delete error:', error);
+      setError(error.response?.data?.message || 'Kategori silinirken hata oluştu');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const openModal = (category?: Category) => {
@@ -138,7 +239,6 @@ const CategoryManagement: React.FC = () => {
       errors.description = 'Açıklama 500 karakterden fazla olamaz';
     }
 
-    // Check if parent category selection creates a circular reference
     if (formData.parentCategoryId && editingCategory) {
       const isCircular = checkCircularReference(editingCategory.id, formData.parentCategoryId);
       if (isCircular) {
@@ -157,7 +257,7 @@ const CategoryManagement: React.FC = () => {
       const category = categories.find(c => c.id === id);
       if (!category) return false;
       if (category.parentCategoryId === categoryId) return true;
-      if (category.parentCategoryId != null) { // null ve undefined kontrolü
+      if (category.parentCategoryId != null) {
         return findParentChain(category.parentCategoryId);
       }
       return false;
@@ -180,17 +280,15 @@ const CategoryManagement: React.FC = () => {
       };
 
       if (editingCategory) {
-        // Update existing category
-        console.log('Updating category with data:', { ...categoryData, id: editingCategory.id }); // Debug
+        console.log('Updating category with data:', { ...categoryData, id: editingCategory.id });
         
         const response = await api.put(`/categories/${editingCategory.id}`, {
           ...categoryData,
           id: editingCategory.id,
         });
         
-        console.log('Update response:', response); // Debug
+        console.log('Update response:', response);
         
-        // Local state'i de güncelle
         setCategories(prevCategories => 
           prevCategories.map(cat => 
             cat.id === editingCategory.id 
@@ -200,7 +298,6 @@ const CategoryManagement: React.FC = () => {
         );
         
       } else {
-        // Create new category
         const response = await api.post('/categories', categoryData);
         setCategories(prevCategories => [...prevCategories, response.data]);
       }
@@ -211,26 +308,6 @@ const CategoryManagement: React.FC = () => {
       setError(error.response?.data?.message || 'Kategori kaydedilirken hata oluştu');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleDelete = async (category: Category) => {
-    if (!window.confirm(`"${category.name}" kategorisini kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!`)) {
-      return;
-    }
-
-    try {
-      // Hard delete - kaydı tamamen sil
-      await api.delete(`/categories/${category.id}`);
-      
-      // Local state'ten de kaldır
-      setCategories(prevCategories => 
-        prevCategories.filter(cat => cat.id !== category.id)
-      );
-      
-    } catch (error: any) {
-      console.error('Error deleting category:', error);
-      setError(error.response?.data?.message || 'Kategori silinirken hata oluştu');
     }
   };
 
@@ -245,14 +322,12 @@ const CategoryManagement: React.FC = () => {
   };
 
   const filteredCategories = categories.filter(category => {
-    // Arama filtresi
     const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (category.description && category.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    // Durum filtresi - TAM OLARAK SİZİN İSTEDİĞİNİZ GİBİ
     const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && category.isActive === true) ||    // isActive true ise "Aktif"
-      (statusFilter === 'inactive' && category.isActive === false);   // isActive false ise "Pasif"
+      (statusFilter === 'active' && category.isActive === true) ||
+      (statusFilter === 'inactive' && category.isActive === false);
     
     return matchesSearch && matchesStatus;
   });
@@ -319,7 +394,7 @@ const CategoryManagement: React.FC = () => {
                 <FiEdit size={16} />
               </button>
               <button
-                onClick={() => handleDelete(category)}
+                onClick={() => openDeleteModal(category)}
                 className="text-red-600 hover:text-red-700 p-1 hover:bg-red-50 rounded"
                 title="Kalıcı Sil"
               >
@@ -496,7 +571,152 @@ const CategoryManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* 🆕 DELETE CONFIRMATION MODAL */}
+      {isDeleteModalOpen && deletingCategory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-6 border-b bg-red-50">
+              <div className="flex items-center">
+                <FiAlertTriangle className="text-red-500 mr-3" size={24} />
+                <h3 className="text-lg font-semibold text-red-800">
+                  ⚠️ Kategori Kalıcı Silme Onayı
+                </h3>
+              </div>
+              <button
+                onClick={closeDeleteModal}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={isDeleting}
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {loadingDeleteInfo ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+                  <span className="ml-3 text-gray-600">Bilgiler kontrol ediliyor...</span>
+                </div>
+              ) : deleteInfo ? (
+                <div className="space-y-4">
+                  {/* Ana uyarı mesajı */}
+                  <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <FiAlertTriangle className="text-red-500 mr-3 mt-0.5 flex-shrink-0" size={20} />
+                      <div>
+                        <h4 className="font-semibold text-red-800 mb-2">
+                          Bu işlem geri alınamaz!
+                        </h4>
+                        <p className="text-red-700 text-sm">
+                          <strong>"{deleteInfo.categoryName}"</strong> kategorisi kalıcı olarak silinecektir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Etkilenecek içerik bilgileri */}
+                  {deleteInfo.totalProductCount > 0 && (
+                    <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
+                      <h5 className="font-semibold text-orange-800 mb-2">
+                        🗑️ Silinecek İçerikler:
+                      </h5>
+                      <ul className="text-orange-700 text-sm space-y-1">
+                        {deleteInfo.directProductCount > 0 && (
+                          <li>• <strong>{deleteInfo.directProductCount}</strong> adet ürün (bu kategoride)</li>
+                        )}
+                        {deleteInfo.subCategoryCount > 0 && (
+                          <li>• <strong>{deleteInfo.subCategoryCount}</strong> adet alt kategori</li>
+                        )}
+                        {deleteInfo.subCategoryProductCount > 0 && (
+                          <li>• <strong>{deleteInfo.subCategoryProductCount}</strong> adet ürün (alt kategorilerde)</li>
+                        )}
+                        <li className="font-semibold border-t border-orange-300 pt-2 mt-2">
+                          TOPLAM: <strong>{deleteInfo.totalProductCount}</strong> ürün silinecek!
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {deleteInfo.totalProductCount === 0 && deleteInfo.subCategoryCount > 0 && (
+                    <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
+                      <p className="text-yellow-800 text-sm">
+                        <strong>{deleteInfo.subCategoryCount}</strong> alt kategori silinecek.
+                      </p>
+                    </div>
+                  )}
+
+                  {deleteInfo.totalProductCount === 0 && deleteInfo.subCategoryCount === 0 && (
+                    <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+                      <p className="text-green-800 text-sm">
+                        ✅ Bu kategori boş. Herhangi bir ürün veya alt kategori etkilenmeyecek.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Konfirmasyon input */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Silme işlemini onaylamak için aşağıdaki metni yazın:
+                    </label>
+                    <div className="bg-gray-100 rounded p-3 border">
+                      <code className="text-red-600 font-mono font-bold">
+                        {deleteInfo.totalProductCount > 0 
+                          ? `SİL ${deleteInfo.categoryName}` 
+                          : deleteInfo.categoryName
+                        }
+                      </code>
+                    </div>
+                    <input
+                      type="text"
+                      value={confirmText}
+                      onChange={(e) => setConfirmText(e.target.value)}
+                      placeholder="Yukarıdaki metni buraya yazın..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      disabled={isDeleting}
+                    />
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <button
+                      type="button"
+                      onClick={closeDeleteModal}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      onClick={handleDeleteConfirm}
+                      disabled={isDeleting || confirmText !== (deleteInfo.totalProductCount > 0 ? `SİL ${deleteInfo.categoryName}` : deleteInfo.categoryName)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Siliniyor...
+                        </>
+                      ) : (
+                        <>
+                          <FiTrash2 />
+                          Kalıcı Olarak Sil
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  <FiAlertCircle size={48} className="mx-auto mb-4 text-red-400" />
+                  <p>Silme bilgileri alınamadı. Lütfen tekrar deneyin.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT/CREATE MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">

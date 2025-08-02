@@ -207,7 +207,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Filter Types (🆕 GÜNCELLENMIŞ)
+// Filter Types (🆕 GÜNCELLENMIŞ VE İYİLEŞTİRİLMİŞ)
 export interface ProductFilters {
   page?: number;
   pageSize?: number;
@@ -215,10 +215,10 @@ export interface ProductFilters {
   categoryId?: number;
   minPrice?: number;
   maxPrice?: number;
-  sortBy?: 'name' | 'price' | 'price_desc' | 'newest' | 'popular';
+  sortBy?: 'name' | 'name_desc' | 'price' | 'price_desc' | 'newest' | 'popular' | 'discount';
   featured?: boolean; // 🆕 YENİ
   sale?: boolean; // 🆕 YENİ
-  gender?: string; // 🆕 YENİ
+  gender?: string; // 🆕 YENİ - "Erkek", "Kadın", "Uniseks", "Çocuk"
 }
 
 // 🆕 YENİ TİPLER - VARIANT İŞLEMLERİ İÇİN
@@ -290,3 +290,16 @@ export interface AdminOrderItem {
   quantity: number;
   totalPrice: number;
 }
+
+// Sort seçenekleri için enum:
+export const SortOptions = {
+  NAME: 'name',
+  NAME_DESC: 'name_desc', 
+  PRICE: 'price',
+  PRICE_DESC: 'price_desc',
+  NEWEST: 'newest',
+  POPULAR: 'popular',
+  DISCOUNT: 'discount'
+} as const;
+
+export type SortOption = typeof SortOptions[keyof typeof SortOptions];

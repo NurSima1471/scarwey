@@ -16,6 +16,8 @@ namespace ECommerce.API.Services
             _logger = logger;
         }
 
+        // ProductService.cs - GetProductsAsync metodunu güncelle
+
         public async Task<(IEnumerable<Product> products, int totalItems)> GetProductsAsync(
             int page,
             int pageSize,
@@ -26,19 +28,23 @@ namespace ECommerce.API.Services
             string? sortBy,
             bool? featured = null,
             bool? sale = null,
-            string? gender = null) // 🆕 YENİ PARAMETRE
+            string? gender = null)
         {
             try
             {
+                _logger.LogInformation("🔍 GetProductsAsync called with filters: page={Page}, gender={Gender}, categoryId={CategoryId}, search={Search}, sale={Sale}, featured={Featured}",
+                    page, gender, categoryId, search, sale, featured);
+
                 var query = _context.Products
                     .Include(p => p.Images)
                     .Include(p => p.Category)
-                    .Include(p => p.Variants) // 🆕 Variants dahil et
+                    .Include(p => p.Variants)
                     .Where(p => p.IsActive);
 
                 // Apply filters
                 if (!string.IsNullOrWhiteSpace(search))
                 {
+                    _logger.LogInformation("🔍 Applying search filter: {Search}", search);
                     query = query.Where(p =>
                         p.Name.ToLower().Contains(search.ToLower()) ||
                         p.Description.ToLower().Contains(search.ToLower()) ||
@@ -47,60 +53,76 @@ namespace ECommerce.API.Services
 
                 if (categoryId.HasValue)
                 {
+                    _logger.LogInformation("📂 Applying category filter: {CategoryId}", categoryId.Value);
                     query = query.Where(p => p.CategoryId == categoryId.Value);
                 }
 
                 // 🆕 Gender filtresi
                 if (!string.IsNullOrWhiteSpace(gender))
                 {
+                    _logger.LogInformation("👤 Applying gender filter: {Gender}", gender);
                     query = query.Where(p => p.Gender == gender);
                 }
 
                 if (minPrice.HasValue)
                 {
+                    _logger.LogInformation("💰 Applying min price filter: {MinPrice}", minPrice.Value);
                     query = query.Where(p => p.Price >= minPrice.Value);
                 }
 
                 if (maxPrice.HasValue)
                 {
+                    _logger.LogInformation("💰 Applying max price filter: {MaxPrice}", maxPrice.Value);
                     query = query.Where(p => p.Price <= maxPrice.Value);
                 }
 
                 if (featured.HasValue && featured.Value)
                 {
+                    _logger.LogInformation("⭐ Applying featured filter");
                     query = query.Where(p => p.IsFeatured);
                 }
 
                 if (sale.HasValue && sale.Value)
                 {
+                    _logger.LogInformation("🔥 Applying sale filter");
                     query = query.Where(p =>
                         p.DiscountPrice.HasValue &&
                         p.DiscountPrice.Value > 0 &&
                         p.DiscountPrice.Value < p.Price);
                 }
 
-                // Apply sorting
+                // ✅ GELİŞTİRİLMİŞ SORTING - Discount sort eklendi
+                _logger.LogInformation("📊 Applying sort: {SortBy}", sortBy);
                 query = sortBy?.ToLower() switch
                 {
-                    "price" => query.OrderBy(p => p.Price),
-                    "price_desc" => query.OrderByDescending(p => p.Price),
+                    "price" => query.OrderBy(p => p.DiscountPrice ?? p.Price), // İndirimli fiyat varsa onu kullan
+                    "price_desc" => query.OrderByDescending(p => p.DiscountPrice ?? p.Price),
                     "newest" => query.OrderByDescending(p => p.CreatedAt),
                     "popular" => query.OrderByDescending(p => p.ViewCount),
+                    "discount" => query.Where(p => p.DiscountPrice.HasValue && p.DiscountPrice.Value > 0)
+                                      .OrderByDescending(p => ((p.Price - p.DiscountPrice!.Value) / p.Price) * 100), // İndirim yüzdesi
+                    "name" => query.OrderBy(p => p.Name),
+                    "name_desc" => query.OrderByDescending(p => p.Name),
                     _ => query.OrderBy(p => p.Name)
                 };
 
                 var totalItems = await query.CountAsync();
+                _logger.LogInformation("📊 Total items found: {TotalItems}", totalItems);
 
                 var products = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
 
+                _logger.LogInformation("✅ Products fetched successfully: {Count} items on page {Page}",
+                    products.Count, page);
+
                 return (products, totalItems);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting products");
+                _logger.LogError(ex, "❌ Error getting products with filters: gender={Gender}, categoryId={CategoryId}",
+                    gender, categoryId);
                 throw;
             }
         }

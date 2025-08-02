@@ -26,13 +26,13 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     debugAuth();
-    dispatch(fetchCategories()); // Kategorileri fetch et
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { cart } = useSelector((state: RootState) => state.cart);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
-  const { categories } = useSelector((state: RootState) => state.categories); // Backend'ten kategoriler
+  const { categories } = useSelector((state: RootState) => state.categories);
 
   const cartItemCount = cart?.cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
 
@@ -49,35 +49,35 @@ const Header: React.FC = () => {
     navigate('/');
   };
 
-  // Sabit kategoriler
-  const staticCategories = [
+  // Gender kategorileri
+  const genderCategories = [
     { 
-      id: 1, 
+      id: 'kadin', 
       name: 'Kadın', 
-      path: '/products?categoryId=1',
+      path: '/products?gender=Kadın',
       icon: '👗'
     },
     { 
-      id: 2, 
+      id: 'erkek', 
       name: 'Erkek', 
-      path: '/products?categoryId=2',
+      path: '/products?gender=Erkek',
       icon: '👔'
     },
     { 
-      id: 3, 
-      name: 'Elektronik', 
-      path: '/products?categoryId=3',
-      icon: '📱'
+      id: 'cocuk', 
+      name: 'Çocuk', 
+      path: '/products?gender=Çocuk',
+      icon: '🧸'
     },
     { 
-      id: 4, 
-      name: 'Ev & Yaşam', 
-      path: '/products?categoryId=4',
-      icon: '🏠'
+      id: 'unisex', 
+      name: 'Unisex', 
+      path: '/products?gender=Uniseks',
+      icon: '👕'
     },
   ];
 
-  // Kategoriler için default ikonlar
+  // Kategoriler için ikon helper
   const getCategoryIcon = (categoryName: string) => {
     const name = categoryName.toLowerCase();
     if (name.includes('kadın') || name.includes('woman')) return '👗';
@@ -88,6 +88,9 @@ const Header: React.FC = () => {
     if (name.includes('çocuk') || name.includes('kid')) return '🧸';
     if (name.includes('ayakkabı') || name.includes('shoe')) return '👟';
     if (name.includes('aksesuar') || name.includes('accessory')) return '💎';
+    if (name.includes('teknoloji')) return '💻';
+    if (name.includes('sağlık')) return '🏥';
+    if (name.includes('kitap')) return '📚';
     return '📦'; // Default ikon
   };
 
@@ -101,61 +104,17 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Main Header */}
         <div className="flex items-center justify-between py-4">
-          {/* Left Section */}
-          <div className="flex items-center space-x-6">
-            {/* Logo */}
-           <Link to="/" className="flex items-center space-x-2 group">
-  {/* Yöntem 1: Kendi logo resminizi kullanmak için bu satırın yorumunu kaldırın */}
-  {/* <img                  
-    src="/src/assets/logo.png"                  
-    alt="ShopHub Logo"                  
-    className="h-10 w-auto group-hover:scale-105 transition-transform duration-300"               
-  /> */}                              
-
-  {/* Yöntem 2: Logo + Text kombinasyonu - AKTİF */}
-  <img                  
-    src="/swlogo.png"                  
-    alt="Scarwey"                  
-    className="h-8 w-8 group-hover:scale-105 transition-transform duration-300"               
-  />               
-  <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent">                 
-    Scarwey               
-  </span>                              
-
-  {/* Yöntem 3: Mevcut gradient tasarım (varsayılan) - KAPALI */}
-  {/* <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">                 
-    <span className="text-white font-bold text-lg">S</span>               
-  </div>               
-  <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">                 
-    ShopHub               
-  </span> */}
-</Link>
-
-            {/* Category Menu - Desktop */}
-            <div className="hidden lg:block relative group">
-              <button className="flex items-center space-x-1 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
-                <FiMenu className="text-gray-600" size={18} />
-                <span className="text-gray-700 font-medium">Kategoriler</span>
-                <FiChevronDown className="text-gray-500" size={16} />
-              </button>
-              
-              {/* Category Dropdown */}
-              <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-3">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/products?categoryId=${category.id}`}
-                      className="flex items-center px-4 py-3 text-sm text-gray-800 hover:bg-orange-50 hover:text-orange-600 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      <span className="text-lg mr-3">{getCategoryIcon(category.name)}</span>
-                      <span className="font-medium">{category.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2 group">
+            <img                  
+              src="/swlogo.png"                  
+              alt="Scarwey"                  
+              className="h-8 w-8 group-hover:scale-105 transition-transform duration-300"               
+            />               
+            <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent">                 
+              Scarwey               
+            </span>
+          </Link>
 
           {/* Search Bar - Center */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
@@ -282,32 +241,65 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Categories Navigation - Desktop */}
+        {/* 🆕 YENİ DÜZEN: Alt Navigation - Kategoriler Sol Tarafta */}
         <nav className="hidden md:block border-t border-gray-100 py-4">
           <div className="flex items-center justify-between">
-            <ul className="flex space-x-8">
+            <ul className="flex space-x-8 items-center">
+              {/* 1. Kategoriler Dropdown - En Solda */}
+              <li className="relative group">
+                <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all duration-300 border border-gray-200 hover:border-orange-200">
+                  <FiMenu className="text-gray-600" size={18} />
+                  <span className="text-gray-700 font-medium">Kategoriler</span>
+                  <FiChevronDown className="text-gray-500" size={16} />
+                </button>
+                
+                {/* Kategori Dropdown */}
+                <div className="absolute left-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-3">
+                    <div className="px-4 py-2 bg-gray-50 rounded-t-xl border-b border-gray-100">
+                      <span className="text-sm font-semibold text-gray-700">Tüm Kategoriler</span>
+                    </div>
+                    {categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/products?categoryId=${category.id}`}
+                        className="flex items-center px-4 py-3 text-sm text-gray-800 hover:bg-orange-50 hover:text-orange-600 transition-colors border-b border-gray-50 last:border-b-0"
+                      >
+                        <span className="text-lg mr-3">{getCategoryIcon(category.name)}</span>
+                        <span className="font-medium">{category.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </li>
+
+              {/* 2. Ana Sayfa */}
               <li>
                 <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium transition-colors relative group">
                   Ana Sayfa
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300"></span>
                 </Link>
               </li>
-              {staticCategories.map((category) => (
-                <li key={category.id}>
+
+              {/* 3. Gender Kategorileri */}
+              {genderCategories.map((gender) => (
+                <li key={gender.id}>
                   <Link
-                    to={category.path}
+                    to={gender.path}
                     className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 font-medium transition-colors relative group"
                   >
-                    <span className="text-lg">{category.icon}</span>
-                    <span>{category.name}</span>
+                    <span className="text-lg">{gender.icon}</span>
+                    <span>{gender.name}</span>
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 </li>
               ))}
             </ul>
+
+            {/* 4. İndirimler - Sağ Tarafta */}
             <Link 
               to="/products?sale=true" 
-              className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full font-medium hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full font-medium hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl animate-pulse"
             >
               <span>🔥</span>
               <span>İndirimler</span>
@@ -334,29 +326,53 @@ const Header: React.FC = () => {
               </div>
             </form>
 
-            {/* Mobile Categories */}
+            {/* Mobile Navigation */}
             <div className="space-y-3">
+              {/* Ana Sayfa */}
               <Link
                 to="/"
-                className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors"
+                className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="text-xl mr-3">🏠</span>
                 Ana Sayfa
               </Link>
+
+              {/* Kategoriler */}
+              <div className="py-3 border-b border-gray-100">
+                <div className="flex items-center mb-3">
+                  <FiMenu className="text-xl mr-3" />
+                  <span className="font-semibold text-gray-700">Kategoriler</span>
+                </div>
+                <div className="ml-8 space-y-2">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      to={`/products?categoryId=${category.id}`}
+                      className="flex items-center py-2 text-sm text-gray-600 hover:text-orange-600 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <span className="text-lg mr-3">{getCategoryIcon(category.name)}</span>
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
               
-              {staticCategories.map((category) => (
+              {/* Gender Kategorileri */}
+              {genderCategories.map((gender) => (
                 <Link
-                  key={category.id}
-                  to={category.path}
-                  className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors"
+                  key={gender.id}
+                  to={gender.path}
+                  className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span className="text-xl mr-3">{category.icon}</span>
-                  {category.name}
+                  <span className="text-xl mr-3">{gender.icon}</span>
+                  {gender.name}
                 </Link>
               ))}
               
+              {/* İndirimler */}
               <Link
                 to="/products?sale=true"
                 className="flex items-center py-3 text-red-500 font-semibold"
