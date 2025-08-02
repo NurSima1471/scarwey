@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 import Home from './pages/Home';
@@ -93,19 +93,19 @@ function App() {
             </Route>
           </Route>
 
-          {/* ✅ 404 Catch-All Route */}
+          {/* ✅ 404 Catch-All Route - React Router ile düzeltildi */}
           <Route path="*" element={
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
               <div className="text-center">
                 <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
                 <h2 className="text-2xl font-semibold text-gray-600 mb-4">Sayfa Bulunamadı</h2>
                 <p className="text-gray-500 mb-8">Aradığınız sayfa mevcut değil.</p>
-                <a 
-                  href="/" 
-                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
+                <Link 
+                  to="/" 
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition inline-block"
                 >
                   Ana Sayfaya Dön
-                </a>
+                </Link>
               </div>
             </div>
           } />

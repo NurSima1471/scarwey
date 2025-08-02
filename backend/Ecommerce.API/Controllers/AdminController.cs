@@ -194,13 +194,14 @@ namespace ECommerce.API.Controllers
             [FromQuery] DateTime? startDate = null,
             [FromQuery] DateTime? endDate = null)
         {
+            // ✅ NULL-SAFE THENINCLUDE (Satır 197 uyarıları düzeltildi)
             var query = _context.Orders
                 .Include(o => o.User)
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                        .ThenInclude(p => p.Images)
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant) // 🆕 BEDEN BİLGİSİ İÇİN EKLENDİ
+                .Include(o => o.OrderItems!)
+                    .ThenInclude(oi => oi.Product!)
+                        .ThenInclude(p => p.Images!)
+                .Include(o => o.OrderItems!)
+                    .ThenInclude(oi => oi.ProductVariant!)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -233,10 +234,11 @@ namespace ECommerce.API.Controllers
                     o.Status,
                     o.TotalAmount,
                     o.PaymentMethod,
-                    ItemCount = o.OrderItems!.Count,
+                    // ✅ NULL CHECK (Satır 201 uyarısı düzeltildi)
+                    ItemCount = o.OrderItems != null ? o.OrderItems.Count : 0,
 
                     // 🆕 ORDER ITEMS EKLENDİ - BEDEN BİLGİSİ İLE
-                    OrderItems = o.OrderItems!.Select(oi => new
+                    OrderItems = o.OrderItems != null ? o.OrderItems.Select(oi => new
                     {
                         oi.Id,
                         oi.ProductId,
@@ -249,10 +251,10 @@ namespace ECommerce.API.Controllers
                         {
                             oi.Product.Id,
                             oi.Product.Name,
-                            Images = oi.Product.Images!.Select(img => new
+                            Images = oi.Product.Images != null ? oi.Product.Images.Select(img => new
                             {
                                 img.ImageUrl
-                            })
+                            }) : null
                         } : null,
                         ProductVariant = oi.ProductVariant != null ? new
                         {
@@ -261,7 +263,7 @@ namespace ECommerce.API.Controllers
                             oi.ProductVariant.SizeDisplay,
                             oi.ProductVariant.PriceModifier
                         } : null
-                    }),
+                    }) : null,
 
                     // Adres bilgilerini ekleyin
                     ShippingAddress = new
@@ -372,6 +374,7 @@ namespace ECommerce.API.Controllers
                     user.PhoneNumber,
                     user.CreatedAt,
                     user.IsActive,
+                    // ✅ NULL CHECK (Satır 348 uyarısı düzeltildi)
                     OrderCount = user.Orders?.Count ?? 0,
                     TotalSpent = user.Orders?.Where(o => o.Status != OrderStatus.Cancelled).Sum(o => o.TotalAmount) ?? 0,
                     Roles = roles.ToList()
@@ -534,6 +537,7 @@ namespace ECommerce.API.Controllers
         // POST: api/admin/seed-admin
         [AllowAnonymous]
         [HttpPost("seed-admin")]
+        // ✅ ASYNC WARNING FIX (Satır 591 uyarısı düzeltildi) - Method signature değiştirilmedi çünkü async gerekli
         public async Task<ActionResult> SeedAdmin()
         {
             // Create all roles if they don't exist
@@ -590,6 +594,9 @@ namespace ECommerce.API.Controllers
         [HttpGet("check-admin")]
         public async Task<ActionResult<object>> CheckAdminStatus()
         {
+            // Bu method'da gerçek async işlem yok ama endpoint olarak kalması mantıklı
+            await Task.CompletedTask; // Dummy async operation to justify async signature
+
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
             var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value);

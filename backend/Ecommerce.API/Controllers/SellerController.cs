@@ -97,13 +97,14 @@ namespace ECommerce.API.Controllers
         {
             try
             {
+                // ✅ NULL-SAFE THENINCLUDE (Satır 100 uyarıları düzeltildi)
                 var query = _context.Orders
                     .Include(o => o.User)
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.Product)
-                            .ThenInclude(p => p.Images)
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.ProductVariant) // 🆕 BEDEN BİLGİSİ İÇİN EKLENDİ
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.Product!)
+                            .ThenInclude(p => p.Images!)
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.ProductVariant!)
                     .AsQueryable();
 
                 // Status filter
@@ -118,10 +119,11 @@ namespace ECommerce.API.Controllers
                 // Search filter (order number, customer name)
                 if (!string.IsNullOrEmpty(search))
                 {
+                    // ✅ NULL CHECK (Satır 104 uyarısı düzeltildi)
                     query = query.Where(o =>
                         o.OrderNumber.Contains(search) ||
-                        (o.User!.FirstName + " " + o.User.LastName).Contains(search) ||
-                        o.User.Email.Contains(search));
+                        (o.User != null && (o.User.FirstName + " " + o.User.LastName).Contains(search)) ||
+                        (o.User != null && o.User.Email != null && o.User.Email.Contains(search)));
                 }
 
                 // Date filters
@@ -156,8 +158,8 @@ namespace ECommerce.API.Controllers
                             lastName = o.User.LastName,
                             email = o.User.Email
                         },
-                        // 🆕 ORDER ITEMS - BEDEN BİLGİSİ İLE GÜNCELLENDİ
-                        orderItems = o.OrderItems!.Select(oi => new
+                        // ✅ NULL CHECK (Satır 124 uyarısı düzeltildi)
+                        orderItems = o.OrderItems != null ? o.OrderItems.Select(oi => new
                         {
                             id = oi.Id,
                             productId = oi.ProductId,
@@ -181,7 +183,7 @@ namespace ECommerce.API.Controllers
                                 oi.ProductVariant.SizeDisplay,
                                 oi.ProductVariant.PriceModifier
                             } : null
-                        }).ToList()
+                        }).ToList() : null
                     })
                     .ToListAsync();
 

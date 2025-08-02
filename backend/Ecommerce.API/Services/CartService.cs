@@ -33,12 +33,13 @@ namespace ECommerce.API.Services
                 {
                     _logger.LogInformation("🔍 Searching cart for UserId: {UserId}", userId.Value);
 
+                    // ✅ NULL-SAFE THENINCLUDE (Satır 36 uyarıları düzeltildi)
                     cart = await _context.Carts
-                        .Include(c => c.CartItems)
-                            .ThenInclude(ci => ci.Product)
-                                .ThenInclude(p => p!.Images)
-                        .Include(c => c.CartItems)
-                            .ThenInclude(ci => ci.ProductVariant) // 🆕 VARIANT INCLUDE
+                        .Include(c => c.CartItems!)
+                            .ThenInclude(ci => ci.Product!)
+                                .ThenInclude(p => p.Images!)
+                        .Include(c => c.CartItems!)
+                            .ThenInclude(ci => ci.ProductVariant!)
                         .FirstOrDefaultAsync(c => c.UserId == userId.Value);
 
                     _logger.LogInformation("🛒 Found cart: {CartFound}, CartId: {CartId}, ItemCount: {ItemCount}",
@@ -48,12 +49,13 @@ namespace ECommerce.API.Services
                 {
                     _logger.LogInformation("🔍 Searching cart for SessionId: {SessionId}", sessionId);
 
+                    // ✅ NULL-SAFE THENINCLUDE (Satır 51 uyarıları düzeltildi)
                     cart = await _context.Carts
-                        .Include(c => c.CartItems)
-                            .ThenInclude(ci => ci.Product)
-                                .ThenInclude(p => p!.Images)
-                        .Include(c => c.CartItems)
-                            .ThenInclude(ci => ci.ProductVariant) // 🆕 VARIANT INCLUDE
+                        .Include(c => c.CartItems!)
+                            .ThenInclude(ci => ci.Product!)
+                                .ThenInclude(p => p.Images!)
+                        .Include(c => c.CartItems!)
+                            .ThenInclude(ci => ci.ProductVariant!)
                         .FirstOrDefaultAsync(c => c.SessionId == sessionId);
 
                     _logger.LogInformation("🛒 Found cart: {CartFound}, CartId: {CartId}, ItemCount: {ItemCount}",
@@ -67,9 +69,8 @@ namespace ECommerce.API.Services
                     UserId = userId,
                     SessionId = sessionId
                 };
-
-                // TotalAmount null kontrolü ve hesaplama
-                if (result.TotalAmount == null || result.Id > 0)
+                // ✅ SONRA - gereksiz null kontrolü kaldırıldı:
+                if (result.TotalAmount == 0 || result.Id > 0)
                 {
                     if (result.CartItems != null && result.CartItems.Any())
                     {
@@ -80,7 +81,6 @@ namespace ECommerce.API.Services
                         result.TotalAmount = 0;
                     }
                 }
-
                 _logger.LogInformation("🎯 Returning cart - CartId: {CartId}, ItemCount: {ItemCount}, TotalAmount: {TotalAmount}",
                     result.Id, result.CartItems?.Count ?? 0, result.TotalAmount);
 
@@ -687,11 +687,12 @@ namespace ECommerce.API.Services
         {
             try
             {
+                // ✅ NULL-SAFE THENINCLUDE (Satır 688 uyarıları düzeltildi)
                 return await _context.Carts
-                    .Include(c => c.CartItems)
-                        .ThenInclude(ci => ci.Product)
-                    .Include(c => c.CartItems)
-                        .ThenInclude(ci => ci.ProductVariant) // 🆕 VARIANT INCLUDE
+                    .Include(c => c.CartItems!)
+                        .ThenInclude(ci => ci.Product!)
+                    .Include(c => c.CartItems!)
+                        .ThenInclude(ci => ci.ProductVariant!)
                     .Include(c => c.User)
                     .Where(c => c.UpdatedAt < since && c.CartItems!.Any())
                     .OrderByDescending(c => c.UpdatedAt)

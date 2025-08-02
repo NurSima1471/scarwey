@@ -21,12 +21,12 @@ const Products: React.FC = () => {
 
   // Local filter states
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedGender, setSelectedGender] = useState<string>(''); // 🆕 YENİ
+  const [selectedGender, setSelectedGender] = useState<string>('');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('name');
 
-  // 🆕 Gender seçenekleri
+  // Gender seçenekleri
   const genderOptions = [
     { value: '', label: 'Tüm Cinsiyetler' },
     { value: 'Erkek', label: 'Erkek' },
@@ -40,21 +40,21 @@ const Products: React.FC = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // ✅ TEK useEffect - Tüm filtreleri handle eder (🆕 gender eklendi)
+  // TEK useEffect - Tüm filtreleri handle eder
   useEffect(() => {
     // URL parametrelerini al
     const categoryId = searchParams.get('categoryId') || searchParams.get('category');
-    const gender = searchParams.get('gender'); // 🆕 YENİ
+    const gender = searchParams.get('gender');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
     const sale = searchParams.get('sale');
     const page = parseInt(searchParams.get('page') || '1');
 
-    console.log('🔍 URL Parameters:', { categoryId, gender, search, featured, sale, page }); // DEBUG
+    console.log('🔍 URL Parameters:', { categoryId, gender, search, featured, sale, page });
 
     // Local state'i güncelle
     if (categoryId) setSelectedCategory(categoryId);
-    if (gender) setSelectedGender(gender); // 🆕 YENİ
+    if (gender) setSelectedGender(gender);
 
     // Tüm filtreleri birleştir
     const allFilters: any = {
@@ -62,7 +62,7 @@ const Products: React.FC = () => {
       pageSize: 12,
       sortBy: sortBy as any,
       categoryId: categoryId ? parseInt(categoryId) : undefined,
-      gender: gender || undefined, // 🆕 YENİ
+      gender: gender || undefined,
       search: search || undefined,
       featured: featured === 'true' ? true : undefined,
       sale: sale === 'true' ? true : undefined,
@@ -70,9 +70,9 @@ const Products: React.FC = () => {
       maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
     };
 
-    console.log('🚀 Sending filters to backend:', allFilters); // DEBUG
+    console.log('🚀 Sending filters to backend:', allFilters);
 
-    // Redux'a gönder - ÖNEMLİ: Her seferinde fresh filters gönder
+    // Redux'a gönder
     dispatch(setFilters(allFilters));
     dispatch(fetchProducts(allFilters));
   }, [searchParams, minPrice, maxPrice, sortBy, dispatch]);
@@ -91,11 +91,10 @@ const Products: React.FC = () => {
     } else {
       newParams.delete('categoryId');
     }
-    newParams.delete('page'); // Reset to page 1
+    newParams.delete('page');
     setSearchParams(newParams);
   };
 
-  // 🆕 YENİ - Gender değişikliği
   const handleGenderChange = (gender: string) => {
     setSelectedGender(gender);
     const newParams = new URLSearchParams(searchParams);
@@ -104,7 +103,7 @@ const Products: React.FC = () => {
     } else {
       newParams.delete('gender');
     }
-    newParams.delete('page'); // Reset to page 1
+    newParams.delete('page');
     setSearchParams(newParams);
   };
 
@@ -121,13 +120,13 @@ const Products: React.FC = () => {
     else newParams.delete('minPrice');
     if (maxPrice) newParams.set('maxPrice', maxPrice);
     else newParams.delete('maxPrice');
-    newParams.delete('page'); // Reset to page 1
+    newParams.delete('page');
     setSearchParams(newParams);
   };
 
   const clearFilters = () => {
     setSelectedCategory('');
-    setSelectedGender(''); // 🆕 YENİ
+    setSelectedGender('');
     setMinPrice('');
     setMaxPrice('');
     setSortBy('name');
@@ -135,8 +134,8 @@ const Products: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex gap-8">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="flex gap-4 lg:gap-8">
         {/* Sidebar Filters - Desktop */}
         <aside className="hidden lg:block w-64 flex-shrink-0">
           <div className="bg-white rounded-lg shadow p-6 sticky top-24">
@@ -150,7 +149,7 @@ const Products: React.FC = () => {
               </button>
             </div>
 
-            {/* 🆕 Gender Filter - YENİ SECTION */}
+            {/* Gender Filter */}
             <div className="mb-6">
               <h3 className="font-medium mb-3 flex items-center gap-2">
                 <span>👤</span>
@@ -242,9 +241,9 @@ const Products: React.FC = () => {
         {/* Mobile Filter Button */}
         <button
           onClick={() => setIsMobileFilterOpen(true)}
-          className="lg:hidden fixed bottom-4 right-4 bg-purple-600 text-white p-4 rounded-full shadow-lg z-10"
+          className="lg:hidden fixed bottom-4 right-4 bg-purple-600 text-white p-3 sm:p-4 rounded-full shadow-lg z-10"
         >
-          <FiFilter size={24} />
+          <FiFilter size={20} />
         </button>
 
         {/* Mobile Filter Drawer */}
@@ -254,8 +253,8 @@ const Products: React.FC = () => {
               className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
               onClick={() => setIsMobileFilterOpen(false)}
             />
-            <div className="lg:hidden fixed inset-y-0 left-0 w-80 bg-white shadow-xl z-50 overflow-y-auto">
-              <div className="p-6">
+            <div className="lg:hidden fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white shadow-xl z-50 overflow-y-auto">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold">Filtreler</h2>
                   <button
@@ -266,7 +265,7 @@ const Products: React.FC = () => {
                   </button>
                 </div>
 
-                {/* 🆕 Mobile Gender Filter - YENİ SECTION */}
+                {/* Mobile Gender Filter */}
                 <div className="mb-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
                     <span>👤</span>
@@ -289,7 +288,7 @@ const Products: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Category Filter */}
+                {/* Mobile Category Filter */}
                 <div className="mb-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
                     <span>📂</span>
@@ -323,7 +322,7 @@ const Products: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Price Filter */}
+                {/* Mobile Price Filter */}
                 <div className="mb-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
                     <span>💰</span>
@@ -371,17 +370,17 @@ const Products: React.FC = () => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1">
+        <main className="flex-1 min-w-0">
           {/* Header */}
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate">
                   {searchParams.get('sale') === 'true' ? '🔥 İndirimli Ürünler' : 
                    searchParams.get('gender') ? `${searchParams.get('gender')} Ürünleri` : 'Ürünler'}
                 </h1>
                 {pagination && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">
                     {pagination.totalItems} ürün bulundu
                     {searchParams.get('sale') === 'true' && (
                       <span className="ml-2 text-red-600 font-medium">
@@ -398,11 +397,11 @@ const Products: React.FC = () => {
               </div>
 
               {/* Sort Dropdown */}
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value)}
-                  className="appearance-none bg-white border rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:border-purple-500"
+                  className="appearance-none bg-white border rounded-lg px-3 py-2 pr-8 text-xs sm:text-sm focus:outline-none focus:border-purple-500 min-w-0"
                 >
                   <option value="name">İsme Göre (A-Z)</option>
                   <option value="price">Fiyata Göre (Düşük-Yüksek)</option>
@@ -413,37 +412,37 @@ const Products: React.FC = () => {
                     <option value="discount">İndirim Yüzdesine Göre</option>
                   )}
                 </select>
-                <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" size={16} />
               </div>
             </div>
 
-            {/* 🆕 Active Filters Display */}
+            {/* Active Filters Display */}
             {(selectedGender || selectedCategory || searchParams.get('search')) && (
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 sm:mt-4 flex flex-wrap gap-1 sm:gap-2">
                 {selectedGender && (
-                  <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                  <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs sm:text-sm">
                     👤 {selectedGender}
                     <button
                       onClick={() => handleGenderChange('')}
                       className="ml-1 hover:text-purple-900"
                     >
-                      <FiX size={14} />
+                      <FiX size={12} />
                     </button>
                   </span>
                 )}
                 {selectedCategory && categories.find(c => c.id.toString() === selectedCategory) && (
-                  <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                  <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs sm:text-sm">
                     📂 {categories.find(c => c.id.toString() === selectedCategory)?.name}
                     <button
                       onClick={() => handleCategoryChange('')}
                       className="ml-1 hover:text-blue-900"
                     >
-                      <FiX size={14} />
+                      <FiX size={12} />
                     </button>
                   </span>
                 )}
                 {searchParams.get('search') && (
-                  <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                  <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs sm:text-sm">
                     🔍 "{searchParams.get('search')}"
                   </span>
                 )}
@@ -467,8 +466,8 @@ const Products: React.FC = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
             </div>
           ) : products.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
-              <p className="text-gray-500 text-lg">
+            <div className="bg-white rounded-lg shadow p-8 sm:p-12 text-center">
+              <p className="text-gray-500 text-base sm:text-lg">
                 {searchParams.get('sale') === 'true' 
                   ? 'Şu anda indirimli ürün bulunmuyor' 
                   : searchParams.get('gender')
@@ -485,31 +484,33 @@ const Products: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* 🚀 MOBİL OPTİMİZE GRİD - EN ÖNEMLİ DEĞİŞİKLİK! */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
-              {/* Pagination */}
+              {/* Pagination - Mobil Optimize */}
               {pagination && pagination.totalPages > 1 && (
-                <div className="mt-8 flex justify-center">
-                  <nav className="flex space-x-2">
+                <div className="mt-6 sm:mt-8 flex justify-center">
+                  <nav className="flex space-x-1 sm:space-x-2">
                     <button
                       onClick={() => handlePageChange(pagination.currentPage - 1)}
                       disabled={pagination.currentPage === 1}
-                      className="px-3 py-2 rounded-lg bg-white shadow hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-2 py-2 sm:px-3 sm:py-2 rounded-lg bg-white shadow hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                     >
                       Önceki
                     </button>
 
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    {/* Mobilde daha az sayfa göster */}
+                    {Array.from({ length: Math.min(3, pagination.totalPages) }, (_, i) => {
                       const page = i + 1;
                       return (
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
-                          className={`px-4 py-2 rounded-lg ${
+                          className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm ${
                             pagination.currentPage === page
                               ? 'bg-purple-600 text-white'
                               : 'bg-white shadow hover:bg-gray-50'
@@ -523,7 +524,7 @@ const Products: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(pagination.currentPage + 1)}
                       disabled={pagination.currentPage === pagination.totalPages}
-                      className="px-3 py-2 rounded-lg bg-white shadow hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-2 py-2 sm:px-3 sm:py-2 rounded-lg bg-white shadow hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                     >
                       Sonraki
                     </button>

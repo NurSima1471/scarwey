@@ -209,18 +209,18 @@ namespace ECommerce.API.Data
                 .HasIndex(o => o.OrderNumber)
                 .IsUnique();
 
-            // 🆕 CONSTRAINTS - Validasyon için
+            // ✅ CONSTRAINTS - YENİ SYNTAX (CS0618 düzeltildi)
             modelBuilder.Entity<Product>()
-                .HasCheckConstraint("CK_Product_Gender",
-                    "\"Gender\" IS NULL OR \"Gender\" IN ('Erkek', 'Kadın', 'Uniseks', 'Çocuk')");
+                .ToTable(t => t.HasCheckConstraint("CK_Product_Gender",
+                    "\"Gender\" IS NULL OR \"Gender\" IN ('Erkek', 'Kadın', 'Uniseks', 'Çocuk')"));
 
             modelBuilder.Entity<ProductVariant>()
-                .HasCheckConstraint("CK_ProductVariant_StockQuantity",
-                    "\"StockQuantity\" >= 0");
+                .ToTable(t => t.HasCheckConstraint("CK_ProductVariant_StockQuantity",
+                    "\"StockQuantity\" >= 0"));
 
             modelBuilder.Entity<ProductVariant>()
-                .HasCheckConstraint("CK_ProductVariant_SortOrder",
-                    "\"SortOrder\" >= 0");
+                .ToTable(t => t.HasCheckConstraint("CK_ProductVariant_SortOrder",
+                    "\"SortOrder\" >= 0"));
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

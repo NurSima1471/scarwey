@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+ï»¿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -48,7 +48,7 @@ namespace ECommerce.API.Controllers
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 IsActive = true,
-                EmailConfirmed = false, // Email doðrulanmamýþ olarak baþlat
+                EmailConfirmed = false, // Email doÄŸrulanmamÄ±ÅŸ olarak baÅŸlat
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -59,7 +59,7 @@ namespace ECommerce.API.Controllers
             {
                 try
                 {
-                    // User rolünü otomatik ata
+                    // User rolÃ¼nÃ¼ otomatik ata
                     if (!await _roleManager.RoleExistsAsync("User"))
                     {
                         var roleResult = await _roleManager.CreateAsync(new IdentityRole<int> { Name = "User" });
@@ -74,14 +74,23 @@ namespace ECommerce.API.Controllers
                         Console.WriteLine($"Role add errors: {string.Join(", ", addRoleResult.Errors.Select(e => e.Description))}");
                     }
 
-                    // Email doðrulama token'ý oluþtur ve email gönder
+                    // âœ… NULL CHECK - Email doÄŸrulama token'Ä± oluÅŸtur ve email gÃ¶nder
                     var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    var emailSent = await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName, emailToken);
 
-                    if (!emailSent)
+                    // Null safety check for user.Email and user.FirstName
+                    if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(user.FirstName))
                     {
-                        // Email gönderilemedi ama kullanýcý oluþturuldu, log'la
-                        Console.WriteLine($"Welcome email could not be sent to {user.Email}");
+                        var emailSent = await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName, emailToken);
+
+                        if (!emailSent)
+                        {
+                            // Email gÃ¶nderilemedi ama kullanÄ±cÄ± oluÅŸturuldu, log'la
+                            Console.WriteLine($"Welcome email could not be sent to {user.Email}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("User email or firstName is null, skipping welcome email");
                     }
                 }
                 catch (Exception ex)
@@ -145,19 +154,28 @@ namespace ECommerce.API.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                // Güvenlik nedeniyle kullanýcý bulunamasa bile baþarýlý mesaj döndür
+                // GÃ¼venlik nedeniyle kullanÄ±cÄ± bulunamasa bile baÅŸarÄ±lÄ± mesaj dÃ¶ndÃ¼r
                 return Ok(new { message = "If your email is registered, you will receive a password reset link." });
             }
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var emailSent = await _emailService.SendPasswordResetEmailAsync(user.Email, user.FirstName, resetToken);
 
-            if (emailSent)
+            // âœ… NULL CHECK - Email ve FirstName null kontrolÃ¼ (SatÄ±r 153 uyarÄ±sÄ±)
+            if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(user.FirstName))
             {
-                return Ok(new { message = "Password reset email sent successfully." });
-            }
+                var emailSent = await _emailService.SendPasswordResetEmailAsync(user.Email, user.FirstName, resetToken);
 
-            return StatusCode(500, new { message = "Failed to send password reset email. Please try again later." });
+                if (emailSent)
+                {
+                    return Ok(new { message = "Password reset email sent successfully." });
+                }
+
+                return StatusCode(500, new { message = "Failed to send password reset email. Please try again later." });
+            }
+            else
+            {
+                return StatusCode(500, new { message = "User email or name information is missing." });
+            }
         }
 
         [HttpPost("reset-password")]
@@ -203,14 +221,23 @@ namespace ECommerce.API.Controllers
             }
 
             var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var emailSent = await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName, emailToken);
 
-            if (emailSent)
+            // âœ… NULL CHECK - Email ve FirstName null kontrolÃ¼ (SatÄ±r 206 uyarÄ±sÄ±)
+            if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(user.FirstName))
             {
-                return Ok(new { message = "Verification email sent successfully." });
-            }
+                var emailSent = await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName, emailToken);
 
-            return StatusCode(500, new { message = "Failed to send verification email. Please try again later." });
+                if (emailSent)
+                {
+                    return Ok(new { message = "Verification email sent successfully." });
+                }
+
+                return StatusCode(500, new { message = "Failed to send verification email. Please try again later." });
+            }
+            else
+            {
+                return StatusCode(500, new { message = "User email or name information is missing." });
+            }
         }
 
         // POST: api/auth/login
@@ -265,23 +292,48 @@ namespace ECommerce.API.Controllers
         private async Task<string> GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]));
+
+            // âœ… NULL CHECK - JWT Secret kontrolÃ¼ (SatÄ±r 268 uyarÄ±sÄ±)
+            var secretKey = jwtSettings["Secret"];
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("JWT Secret key is not configured in appsettings.json");
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Kullanýcýnýn rollerini çekiyoruz
+            // KullanÄ±cÄ±nÄ±n rollerini Ã§ekiyoruz
             var roles = await _userManager.GetRolesAsync(user);
 
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("firstName", user.FirstName),
-                new Claim("lastName", user.LastName)
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            // Rol claim'lerini ekle
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+            // âœ… NULL CHECK - Email null kontrolÃ¼ (SatÄ±r 277 uyarÄ±sÄ± iÃ§in)
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
+            }
+
+            // âœ… NULL CHECK - FirstName ve LastName null kontrolÃ¼
+            if (!string.IsNullOrEmpty(user.FirstName))
+            {
+                claims.Add(new Claim("firstName", user.FirstName));
+            }
+
+            if (!string.IsNullOrEmpty(user.LastName))
+            {
+                claims.Add(new Claim("lastName", user.LastName));
+            }
+
+            // Rol claim'lerini ekle - null check ile
+            if (roles != null && roles.Any())
+            {
+                claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role ?? string.Empty)).Where(claim => !string.IsNullOrEmpty(claim.Value)));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],

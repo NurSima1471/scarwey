@@ -11,7 +11,6 @@ using ECommerce.API.Services.Interfaces;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http.Features;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -22,7 +21,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
-// File Upload Configuration - Dosya y�kleme i�in gerekli
+// File Upload Configuration - Dosya yükleme için gerekli
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB limit
@@ -39,10 +38,20 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("Cloudinary"));
 
-// ✅ Cloudinary Service Registration  
+// ✅ Service Registrations
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IRefundService, RefundService>();
 
-builder.Services.AddDirectoryBrowser();
+// HttpClient for Email Service
+builder.Services.AddHttpClient<EmailService>();
+
+// Email Configuration
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
 // Identity Configuration
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
@@ -61,9 +70,17 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 .AddDefaultTokenProviders()
 .AddRoles<IdentityRole<int>>();
 
-// JWT Authentication
+// JWT Authentication - NULL SAFE 🛡️
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Secret"]);
+var secretKey = jwtSettings["Secret"];
+
+// ✅ CRITICAL NULL CHECK - Prevents CS8604 warning
+if (string.IsNullOrEmpty(secretKey))
+{
+    throw new InvalidOperationException("JWT Secret key is not configured in appsettings.json");
+}
+
+var secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -72,160 +89,166 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    // ✅ NULL SAFE JWT SETTINGS - Prevents CS8604 warnings
+    var issuer = jwtSettings["Issuer"];
+    var audience = jwtSettings["Audience"];
+
+    if (string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+    {
+        throw new InvalidOperationException("JWT Issuer and Audience must be configured in appsettings.json");
+    }
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(secretKeyBytes),
         ClockSkew = TimeSpan.Zero
     };
 });
 
-// CORS Configuration
+// ✅ TEK VE TEMİZ CORS POLICY - DÜZELTME
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
-        builder =>
+    options.AddPolicy("MainPolicy", corsBuilder =>
+    {
+        if (builder.Environment.IsDevelopment())
         {
-            builder.WithOrigins(
-                    "http://localhost:3000",      // Local development
-                    "https://scarwey-2.vercel.app"  // Production frontend
+            // Development: Daha esnek
+            corsBuilder.WithOrigins(
+                    "http://localhost:3000",
+                    "http://localhost:3001",
+                    "https://scarwey-2.vercel.app"
                    )
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials()
-                   .SetPreflightMaxAge(TimeSpan.FromMinutes(10)); // Preflight cache
-        });
-});
-
-// Ayr�ca development ortam�nda daha esnek CORS policy ekleyebiliriz
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("Development",
-            builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyHeader()
-                       .AllowAnyMethod();
-            });
+                   .SetPreflightMaxAge(TimeSpan.FromMinutes(5));
+        }
+        else
+        {
+            // Production: Sıkı güvenlik
+            corsBuilder.WithOrigins("https://scarwey-2.vercel.app")
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials()
+                   .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
+        }
     });
-}
+});
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
-// Add Services
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<ICartService, CartService>();
-// IJwtService'i dependency injection'a ekleyin
-// HttpClient for Email Service
-builder.Services.AddHttpClient<EmailService>();
-// Email Configuration
-builder.Services.Configure<EmailSettings>(
-    builder.Configuration.GetSection("EmailSettings"));
-
-// Email Service
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IRefundService, RefundService>();
-// Swagger/OpenAPI
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+// ✅ SWAGGER SADECE DEVELOPMENT'DA
+if (builder.Environment.IsDevelopment())
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
-        Title = "E-Commerce API",
-        Version = "v1",
-        Description = "E-Commerce API for React Frontend"
-    });
-
-    // JWT Authentication for Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    // Session ID Header for Swagger
-    c.AddSecurityDefinition("SessionId", new OpenApiSecurityScheme
-    {
-        Description = "Session ID header for guest users. Enter any session ID (e.g., 'test-session-123')",
-        Name = "X-Session-Id",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        c.SwaggerDoc("v1", new OpenApiInfo
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        },
+            Title = "E-Commerce API",
+            Version = "v1",
+            Description = "E-Commerce API for React Frontend - Development Mode"
+        });
+
+        // JWT Authentication for Swagger
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
+            Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        // Session ID Header for Swagger
+        c.AddSecurityDefinition("SessionId", new OpenApiSecurityScheme
+        {
+            Description = "Session ID header for guest users. Enter any session ID (e.g., 'test-session-123')",
+            Name = "X-Session-Id",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "SessionId"
-                }
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
             },
-            Array.Empty<string>()
-        }
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "SessionId"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
     });
-});
+}
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-// süslü parantezlerini de sildim eğer açarsak yine ekleriz> if (app.Environment.IsDevelopment())
-
+// ✅ SWAGGER SADECE DEVELOPMENT'DA
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "E-Commerce API V1");
+        c.RoutePrefix = "swagger"; // /swagger URL'si
     });
 
+    // Development'da directory browsing
+    app.UseDirectoryBrowser();
+}
 
 app.UseHttpsRedirection();
 
-// Static Files - Resim dosyalar�n�n servis edilmesi i�in �OK �NEML�!
+// Static Files - Resim dosyalarının servis edilmesi için ÇOK ÖNEMLİ!
 app.UseStaticFiles();
 
-//sonradan ekledim cloudinary için
-app.UseDirectoryBrowser();
-
-
-app.UseCors("AllowReactApp");
+// ✅ TEMİZ CORS KULLANIMI
+app.UseCors("MainPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-//test endpointi ekledim add mapcontrollers tan önce
-app.MapGet("/", () => "E-Commerce API is running!");
-app.MapGet("/health", () => "Healthy");
+// Health check endpoints
+app.MapGet("/", () => new {
+    message = "E-Commerce API is running!",
+    version = "1.0.0",
+    environment = app.Environment.EnvironmentName,
+    timestamp = DateTime.UtcNow
+});
 
+app.MapGet("/health", () => new {
+    status = "Healthy",
+    timestamp = DateTime.UtcNow
+});
 
 app.MapControllers();
 
-// wwwroot klas�r yap�s�n� olu�tur
+// wwwroot klasör yapısını oluştur
 var webRootPath = app.Environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 var imagesPath = Path.Combine(webRootPath, "images", "products");
 Directory.CreateDirectory(imagesPath);
@@ -237,7 +260,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Starting database migration...");
         await context.Database.MigrateAsync();
+        logger.LogInformation("Database migration completed successfully.");
 
         // Seed data can be added here later
     }
@@ -245,6 +272,7 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating the database.");
+        throw; // Production'da hata durumunda uygulama başlamasın
     }
 }
 

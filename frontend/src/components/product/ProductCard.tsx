@@ -103,7 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Overlay for hover effects */}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300" />
           
-          {/* Badges Container */}
+          {/* Badges Container - Yazılar geri eklendi */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {discountPercentage > 0 && (
               <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
@@ -123,29 +123,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </span>
             )}
           </div>
-
-          {/* 🆕 Size Badge - Sadece beden varsa göster */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1">
-            {product.hasSizes && availableSizesCount > 0 && (
-              <span className="bg-gradient-to-r from-green-500 to-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-                <FiTag size={10} />
-                {availableSizesCount} BEDEN
-              </span>
-            )}
-          </div>
           
-          {/* Action Buttons - Hover'da görünür */}
-          <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {/* 📱 MOBİL ACTION BUTTONS - Sadece desktop'ta görünür */}
+          <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 hidden sm:flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <button
               onClick={handleToggleWishlist}
-              className={`p-2 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 ${
+              className={`p-1.5 sm:p-2 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 ${
                 isInWishlist 
                   ? 'bg-red-500 text-white' 
                   : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white'
               }`}
               title={isInWishlist ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
             >
-              <FiHeart size={16} className={isInWishlist ? 'fill-current' : ''} />
+              <FiHeart size={14} className={isInWishlist ? 'fill-current' : ''} />
             </button>
 
             <button
@@ -154,126 +144,128 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 e.stopPropagation();
                 window.location.href = `/products/${product.id}`;
               }}
-              className="p-2 rounded-full shadow-lg bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white transition-all duration-300 transform hover:scale-110"
+              className="p-1.5 sm:p-2 rounded-full shadow-lg bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white transition-all duration-300 transform hover:scale-110"
               title="Detaya Git"
             >
-              <FiEye size={16} />
+              <FiEye size={14} />
             </button>
           </div>
 
           {/* Stock Status Overlay */}
           {totalStock === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm">
+              <span className="bg-red-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg font-bold text-xs sm:text-sm">
                 STOKTA YOK
               </span>
             </div>
           )}
         </div>
         
-        <div className="p-4 flex-1 flex flex-col">
-          {/* Brand */}
+        {/* 📱 MOBİL OPTİMİZE CONTENT AREA */}
+        <div className="p-2 sm:p-4 flex-1 flex flex-col">
+          {/* Brand - Sadece desktop'ta göster */}
           {product.brand && (
-            <p className="text-xs text-purple-600 uppercase tracking-wide mb-1 font-semibold">
+            <p className="hidden sm:block text-xs text-purple-600 uppercase tracking-wide mb-1 font-semibold">
               {product.brand}
             </p>
           )}
           
-          {/* Product Name */}
-          <h3 className="font-semibold text-lg mb-2 text-gray-800 line-clamp-2 group-hover:text-purple-600 transition-colors flex-1">
+          {/* 📱 Product Name - Mobilde tek satır */}
+          <h3 className="font-semibold text-sm sm:text-lg mb-1 sm:mb-2 text-gray-800 line-clamp-1 sm:line-clamp-2 group-hover:text-purple-600 transition-colors flex-1">
             {product.name}
           </h3>
           
-          {/* Description */}
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          {/* Description - Sadece desktop'ta göster */}
+          <p className="hidden sm:block text-gray-600 text-sm mb-3 line-clamp-2">
             {product.description}
           </p>
 
-          {/* 🆕 Size & Gender Info */}
-          <div className="mb-3 space-y-1">
-            {product.hasSizes && product.variants && product.variants.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Bedenler:</span>
-                <div className="flex gap-1">
+          {/* 📱 Size Info - Mobilde daha kompakt */}
+          {product.hasSizes && product.variants && product.variants.length > 0 && (
+            <div className="mb-2 sm:mb-3">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-[10px] sm:text-xs text-gray-500">Bedenler:</span>
+                <div className="flex gap-0.5 sm:gap-1">
                   {product.variants
                     .filter(v => v.isAvailable && v.stockQuantity > 0)
-                    .slice(0, 4)
+                    .slice(0, 2) // Mobilde sadece 2 beden göster
                     .map((variant, index) => (
                       <span 
                         key={variant.id} 
-                        className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+                        className="text-[10px] sm:text-xs bg-gray-100 text-gray-700 px-1 py-0.5 sm:px-2 sm:py-1 rounded"
                       >
                         {variant.sizeDisplay || variant.size}
                       </span>
                     ))
                   }
-                  {availableSizesCount > 4 && (
-                    <span className="text-xs text-gray-500">
-                      +{availableSizesCount - 4} daha
+                  {availableSizesCount > 2 && (
+                    <span className="text-[10px] sm:text-xs text-gray-500">
+                      +{availableSizesCount - 2}
                     </span>
                   )}
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
-          {/* Price and Cart */}
+          {/* 📱 PRICE SECTION - Mobilde kompakt */}
           <div className="mt-auto">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                {product.discountPrice ? (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-red-600">
-                        ₺{product.discountPrice.toFixed(2)}
-                      </span>
-                      <span className="text-gray-400 line-through text-sm">
-                        ₺{product.price.toFixed(2)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-green-600 font-medium">
-                      ₺{(product.price - product.discountPrice).toFixed(2)} tasarruf!
-                    </p>
+            <div className="mb-2 sm:mb-3">
+              {product.discountPrice ? (
+                <div className="space-y-0.5 sm:space-y-1">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-sm sm:text-xl font-bold text-red-600">
+                      ₺{product.discountPrice.toFixed(2)}
+                    </span>
+                    <span className="text-gray-400 line-through text-xs sm:text-sm">
+                      ₺{product.price.toFixed(2)}
+                    </span>
                   </div>
-                ) : (
-                  <span className="text-xl font-bold text-gray-800">
-                    ₺{product.price.toFixed(2)}
-                  </span>
-                )}
-              </div>
+                  {/* Tasarruf bilgisi sadece desktop'ta */}
+                  <p className="hidden sm:block text-xs text-green-600 font-medium">
+                    ₺{(product.price - product.discountPrice).toFixed(2)} tasarruf!
+                  </p>
+                </div>
+              ) : (
+                <span className="text-sm sm:text-xl font-bold text-gray-800">
+                  ₺{product.price.toFixed(2)}
+                </span>
+              )}
             </div>
             
-            {/* 🆕 Improved Action Button - Hep aynı stil */}
+            {/* 📱 MOBİL OPTİMİZE ACTION BUTTON */}
             {totalStock > 0 ? (
               <button
                 onClick={handleAddToCart}
                 disabled={cartLoading}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 text-sm font-medium transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 text-xs sm:text-sm font-medium transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
               >
                 {product.hasSizes && product.variants?.length ? (
                   <>
-                    <FiEye size={16} />
-                    İncele
+                    <FiEye size={12} className="sm:size-4" />
+                    <span className="hidden sm:inline">İncele</span>
+                    <span className="sm:hidden">İncele</span>
                   </>
                 ) : (
                   <>
-                    <FiShoppingCart size={16} />
-                    Sepete Ekle
+                    <FiShoppingCart size={12} className="sm:size-4" />
+                    <span className="hidden sm:inline">Sepete Ekle</span>
+                    <span className="sm:hidden">Sepet</span>
                   </>
                 )}
               </button>
             ) : (
               <button
                 disabled
-                className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed text-sm font-medium"
+                className="w-full bg-gray-300 text-gray-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg cursor-not-allowed text-xs sm:text-sm font-medium"
               >
                 Stokta Yok
               </button>
             )}
           </div>
           
-          {/* Stock & Shipping Info */}
-          <div className="mt-3 space-y-1">
+          {/* 📱 Stock & Shipping Info - Sadece desktop'ta */}
+          <div className="hidden sm:block mt-3 space-y-1">
             {totalStock > 0 && totalStock < 10 && (
               <p className="text-xs text-orange-600 font-medium">
                 ⚡ Son {totalStock} ürün - Hemen sipariş ver!
@@ -281,9 +273,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
             
             <p className="text-xs text-gray-500">
-              🚚 Ücretsiz kargo (₺150 üzeri)
+              🚚 Ücretsiz kargo (₺1500 üzeri)
             </p>
           </div>
+
+          {/* 📱 MOBİL WISHLIST BUTTON - Sadece mobilde görünür */}
+          <button
+            onClick={handleToggleWishlist}
+            className={`sm:hidden absolute top-2 right-2 p-1.5 rounded-full shadow-lg transition-all duration-300 ${
+              isInWishlist 
+                ? 'bg-red-500 text-white' 
+                : 'bg-white/90 backdrop-blur-sm text-gray-700'
+            }`}
+          >
+            <FiHeart size={12} className={isInWishlist ? 'fill-current' : ''} />
+          </button>
         </div>
       </div>
     </Link>

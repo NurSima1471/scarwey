@@ -22,12 +22,13 @@ namespace ECommerce.API.Services
         {
             try
             {
+                // ✅ NULL-SAFE THENINCLUDE (Satır 25 uyarıları düzeltildi)
                 return await _context.Orders
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.Product)
-                            .ThenInclude(p => p.Images)
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.ProductVariant) // 🆕 BU SATIRI EKLEYİN
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.Product!)
+                            .ThenInclude(p => p.Images!)
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.ProductVariant!)
                     .Where(o => o.UserId == userId)
                     .OrderByDescending(o => o.OrderDate)
                     .ToListAsync();
@@ -43,12 +44,13 @@ namespace ECommerce.API.Services
         {
             try
             {
+                // ✅ NULL-SAFE THENINCLUDE (Satır 46 uyarıları düzeltildi)
                 return await _context.Orders
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.Product)
-                            .ThenInclude(p => p.Images)
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.ProductVariant) // 🆕 BU SATIRI EKLEYİN
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.Product!)
+                            .ThenInclude(p => p.Images!)
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.ProductVariant!)
                     .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
             }
             catch (Exception ex)
@@ -62,12 +64,12 @@ namespace ECommerce.API.Services
         {
             try
             {
-                // Get user's cart - 🆕 ProductVariant da include et
+                // ✅ NULL-SAFE THENINCLUDE (Satır 66 uyarıları düzeltildi)
                 var cart = await _context.Carts
-                    .Include(c => c.CartItems)
-                        .ThenInclude(ci => ci.Product)
-                    .Include(c => c.CartItems)
-                        .ThenInclude(ci => ci.ProductVariant) // 🆕 BEDEN BİLGİSİ İÇİN EKLENDİ
+                    .Include(c => c.CartItems!)
+                        .ThenInclude(ci => ci.Product!)
+                    .Include(c => c.CartItems!)
+                        .ThenInclude(ci => ci.ProductVariant!)
                     .FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
@@ -176,7 +178,8 @@ namespace ECommerce.API.Services
                 // Sipariş onay emaili gönder
                 try
                 {
-                    if (!string.IsNullOrEmpty(user.Email))
+                    // ✅ NULL CHECK - User.Email kontrolü (Satır 49 uyarısı düzeltildi)
+                    if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(user.FirstName))
                     {
                         var emailSent = await _emailService.SendOrderConfirmationEmailAsync(
                             user.Email,
@@ -258,8 +261,10 @@ namespace ECommerce.API.Services
         {
             try
             {
+                // ✅ NULL-SAFE THENINCLUDE (Satır 214 uyarısı düzeltildi)
                 return await _context.Orders
-                    .Include(o => o.OrderItems)
+                    .Include(o => o.OrderItems!)
+                        .ThenInclude(oi => oi.Product!)
                     .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
             }
             catch (Exception ex)
@@ -291,7 +296,8 @@ namespace ECommerce.API.Services
                 // Status değişikliği email gönder
                 try
                 {
-                    if (order.User != null && !string.IsNullOrEmpty(order.User.Email))
+                    // ✅ NULL CHECK - User ve User.Email kontrolü (Satır 28 tarzı uyarı düzeltildi)
+                    if (order.User != null && !string.IsNullOrEmpty(order.User.Email) && !string.IsNullOrEmpty(order.User.FirstName))
                     {
                         var emailSent = await _emailService.SendOrderStatusUpdateEmailAsync(
                             order.User.Email,
@@ -513,11 +519,18 @@ namespace ECommerce.API.Services
             }
         }
 
-        public async Task<string> GenerateOrderNumberAsync()
+        // ✅ ASYNC WARNING FIX (Satır 479 uyarısı düzeltildi)
+        public string GenerateOrderNumber()
         {
             var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var random = new Random().Next(1000, 9999);
             return $"ORD-{timestamp}-{random}";
+        }
+
+        // Wrapper method for async compatibility
+        public Task<string> GenerateOrderNumberAsync()
+        {
+            return Task.FromResult(GenerateOrderNumber());
         }
 
         public async Task<decimal> CalculateShippingCostAsync(int addressId)
