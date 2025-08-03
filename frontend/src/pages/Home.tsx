@@ -24,6 +24,8 @@ const Home: React.FC = () => {
   const { categories, isLoading: categoriesLoading } = useSelector((state: RootState) => state.categories);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // Hero slides data
   const heroSlides = [
@@ -130,10 +132,40 @@ const Home: React.FC = () => {
     return () => clearInterval(timer);
   }, [heroSlides.length]);
 
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(0); // otherwise the swipe is fired even with usual touch events
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }
+    if (isRightSwipe) {
+      setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 1. Hero Section with Carousel */}
-      <section className="relative h-[70vh] min-h-[500px] overflow-hidden">
+      <section 
+        className="relative h-[70vh] min-h-[500px] overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {heroSlides.map((slide, index) => (
           <div
             key={slide.id}
@@ -176,16 +208,16 @@ const Home: React.FC = () => {
           </div>
         ))}
 
-        {/* Carousel Controls */}
+        {/* Carousel Controls - Sadece Desktop */}
         <button
           onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-opacity-30 transition z-10"
+          className="hidden md:block absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-opacity-30 transition z-10"
         >
           <FiChevronLeft size={24} />
         </button>
         <button
           onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-opacity-30 transition z-10"
+          className="hidden md:block absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-opacity-30 transition z-10"
         >
           <FiChevronRight size={24} />
         </button>
@@ -203,8 +235,6 @@ const Home: React.FC = () => {
           ))}
         </div>
       </section>
-
-      
 
       {/* 3. Featured Products Section - DOĞRU YERİNE TAŞINDI */}
       <section className="py-16 bg-gray-50">
@@ -250,7 +280,7 @@ const Home: React.FC = () => {
             </h2>
             <p className="text-white text-lg opacity-90">Sınırlı süre! Kaçırma!</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {flashDeals.map((deal) => (
               <div key={deal.id} className="bg-white rounded-2xl p-6 shadow-xl transform hover:scale-105 transition duration-300">
                 <div className="relative mb-4">
@@ -289,6 +319,49 @@ const Home: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* Mobile Kaydırmalı Görünüm */}
+          <div className="md:hidden overflow-x-auto">
+            <div className="flex gap-4 pb-4" style={{ width: `${flashDeals.length * 280}px` }}>
+              {flashDeals.map((deal) => (
+                <div key={deal.id} className="bg-white rounded-2xl p-4 shadow-xl min-w-[260px]">
+                  <div className="relative mb-3">
+                    <img
+                      src={deal.image}
+                      alt={deal.name}
+                      className="w-full h-36 object-cover rounded-xl"
+                    />
+                    <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      -%{deal.discount}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-base mb-2">{deal.name}</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl font-bold text-red-500">₺{deal.salePrice}</span>
+                    <span className="text-gray-400 line-through text-sm">₺{deal.originalPrice}</span>
+                  </div>
+                  <div className="text-center mb-3">
+                    <div className="text-xs text-gray-600 mb-1 flex items-center justify-center gap-1">
+                      <FiClock size={10} />
+                      Kalan Süre:
+                    </div>
+                    <div className="text-sm font-mono font-bold text-red-500">{deal.timeLeft}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-gray-600 mb-2">
+                      Sadece {deal.stock} adet kaldı!
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-red-500 h-2 rounded-full transition-all"
+                        style={{ width: `${Math.max(10, (deal.stock / 50) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -306,77 +379,21 @@ const Home: React.FC = () => {
             </div>
           ) : categories && categories.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {categories.slice(0, 6).map((category, index) => {
-                // Kategori adına göre emoji ve renk belirleme
-                const getCategoryStyle = (name: string, index: number) => {
-                  const categoryMappings: { [key: string]: { emoji: string; color: string } } = {
-                    'elektronik': { emoji: '📱', color: 'bg-blue-500' },
-                    'telefon': { emoji: '📱', color: 'bg-blue-500' },
-                    'bilgisayar': { emoji: '💻', color: 'bg-gray-600' },
-                    'laptop': { emoji: '💻', color: 'bg-gray-600' },
-                    'moda': { emoji: '👗', color: 'bg-pink-500' },
-                    'giyim': { emoji: '👕', color: 'bg-pink-500' },
-                    'kadın': { emoji: '👗', color: 'bg-pink-500' },
-                    'erkek': { emoji: '👔', color: 'bg-blue-600' },
-                    'çocuk': { emoji: '🧸', color: 'bg-yellow-500' },
-                    'ev': { emoji: '🏠', color: 'bg-green-500' },
-                    'yaşam': { emoji: '🏠', color: 'bg-green-500' },
-                    'spor': { emoji: '⚽', color: 'bg-orange-500' },
-                    'fitness': { emoji: '💪', color: 'bg-orange-500' },
-                    'kitap': { emoji: '📚', color: 'bg-purple-500' },
-                    'oyuncak': { emoji: '🧸', color: 'bg-yellow-500' },
-                    'oyun': { emoji: '🎮', color: 'bg-red-500' },
-                    'mutfak': { emoji: '🍳', color: 'bg-green-600' },
-                    'banyo': { emoji: '🛁', color: 'bg-blue-400' },
-                    'bahçe': { emoji: '🌱', color: 'bg-green-400' },
-                    'otomotiv': { emoji: '🚗', color: 'bg-gray-700' },
-                    'aksesuar': { emoji: '💍', color: 'bg-purple-400' },
-                    'saat': { emoji: '⌚', color: 'bg-black' },
-                    'ayakkabı': { emoji: '👟', color: 'bg-brown-500' },
-                    'çanta': { emoji: '👜', color: 'bg-brown-600' },
-                    'kozmetik': { emoji: '💄', color: 'bg-pink-400' },
-                    'sağlık': { emoji: '🏥', color: 'bg-red-400' }
-                  };
-
-                  const lowerName = name.toLowerCase();
-                  
-                  // Önce tam eşleşme ara
-                  for (const [key, value] of Object.entries(categoryMappings)) {
-                    if (lowerName.includes(key)) {
-                      return value;
-                    }
-                  }
-
-                  // Fallback renkler
-                  const fallbackColors = [
-                    'bg-blue-500', 'bg-pink-500', 'bg-green-500', 
-                    'bg-orange-500', 'bg-purple-500', 'bg-yellow-500',
-                    'bg-red-500', 'bg-indigo-500', 'bg-teal-500'
-                  ];
-                  
-                  return {
-                    emoji: '🏷️',
-                    color: fallbackColors[index % fallbackColors.length]
-                  };
-                };
-
-                const { emoji, color } = getCategoryStyle(category.name, index);
-
-                return (
-                  <Link
-                    key={category.id}
-                    to={`/products?categoryId=${category.id}`}
-                    className="group"
-                  >
-                    <div className={`${color} rounded-2xl p-6 hover:shadow-lg transition-all duration-300 text-center transform hover:scale-105 hover:rotate-1`}>
-                      <div className="text-4xl mb-3">{emoji}</div>
-                      <h3 className="font-semibold text-gray-900 text-sm drop-shadow-sm">
+              {categories.slice(0, 6).map((category, index) => (
+                <Link
+                  key={category.id}
+                  to={`/products?categoryId=${category.id}`}
+                  className="group"
+                >
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border border-orange-200 hover:border-orange-300 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 text-center transform hover:scale-105 hover:-translate-y-1">
+                    <div className="flex items-center justify-center h-full">
+                      <h3 className="font-semibold text-orange-800 text-sm text-center">
                         {category.name}
                       </h3>
                     </div>
-                  </Link>
-                );
-              })}
+                  </div>
+                </Link>
+              ))}
             </div>
           ) : (
             <div className="text-center">
@@ -399,8 +416,8 @@ const Home: React.FC = () => {
               { title: 'Ücretsiz Kargo', subtitle: '100₺ üzeri', icon: '🚚', color: 'bg-green-100', textColor: 'text-green-600' },
               { title: 'Hızlı Teslimat', subtitle: '1-3 gün içinde', icon: '⚡', color: 'bg-yellow-100', textColor: 'text-yellow-600' },
               { title: 'Kapıda Ödeme', subtitle: 'Güvenli teslimat', icon: '💰', color: 'bg-green-100', textColor: 'text-green-600' },
-              { title: 'Kolay İade', subtitle: '14 gün', icon: '↩', color: 'bg-purple-100', textColor: 'text-purple-600' },
-              { title: 'WhatsApp Destek', subtitle: 'Anında yanıt', icon: '💬', color: 'bg-green-100', textColor: 'text-green-600' },
+              { title: 'Kolay İade', subtitle: '14 gün', color: 'bg-purple-100', textColor: 'text-purple-600', icon: '↩' },
+              { title: 'WhatsApp Destek', subtitle: 'Anında yanıt', color: 'bg-green-100', textColor: 'text-green-600', icon: '💬' },
             ].map((benefit, index) => (
               <div 
                 key={index} 
@@ -445,7 +462,7 @@ const Home: React.FC = () => {
             
             <div className="text-center p-6 group">
               <div className="w-20 h-20 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-opacity-30 transition-all transform group-hover:scale-110">
-                <span className="text-3xl">💰</span>
+                <span className="text-3xl font-bold">₺</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">Kapıda Ödeme</h3>
               <p className="text-purple-100">Güvenli teslimat ile kapınızda ödeme imkanı</p>
@@ -477,7 +494,7 @@ const Home: React.FC = () => {
       <section className="py-12 bg-white border-t">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-2xl font-bold text-gray-800 mb-4">
-            Hemen alışverişe başlayın! 🛍
+            Hemen alışverişe başlayın!
           </h3>
           <Link
             to="/products"

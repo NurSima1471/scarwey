@@ -10,11 +10,14 @@ import ProductCard from '../components/product/ProductCard';
 const FiFilter = Icons.FiFilter as any;
 const FiX = Icons.FiX as any;
 const FiChevronDown = Icons.FiChevronDown as any;
+const FiChevronLeft = Icons.FiChevronLeft as any;
+const FiChevronRight = Icons.FiChevronRight as any;
 
 const Products: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [isDesktopFilterOpen, setIsDesktopFilterOpen] = useState(false); // 🆕 Desktop filter toggle
   
   const { products, pagination, filters, isLoading } = useSelector((state: RootState) => state.products);
   const { categories } = useSelector((state: RootState) => state.categories);
@@ -136,9 +139,22 @@ const Products: React.FC = () => {
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <div className="flex gap-4 lg:gap-8">
-        {/* Sidebar Filters - Desktop */}
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <div className="bg-white rounded-lg shadow p-6 sticky top-24">
+        {/* 🆕 Desktop Filter Toggle Button */}
+        <button
+          onClick={() => setIsDesktopFilterOpen(!isDesktopFilterOpen)}
+          className="hidden lg:flex fixed top-1/2 left-4 z-30 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-all duration-300 transform -translate-y-1/2"
+          style={{ left: isDesktopFilterOpen ? '280px' : '16px' }}
+        >
+          {isDesktopFilterOpen ? <FiChevronLeft size={20} /> : <FiChevronRight size={20} />}
+        </button>
+
+        {/* Sidebar Filters - Desktop with Collapse */}
+        <aside className={`hidden lg:block flex-shrink-0 transition-all duration-300 ${
+          isDesktopFilterOpen ? 'w-64' : 'w-0 overflow-hidden'
+        }`}>
+          <div className={`bg-white rounded-lg shadow p-6 sticky top-24 transition-opacity duration-300 ${
+            isDesktopFilterOpen ? 'opacity-100' : 'opacity-0'
+          }`}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Filtreler</h2>
               <button
@@ -152,7 +168,6 @@ const Products: React.FC = () => {
             {/* Gender Filter */}
             <div className="mb-6">
               <h3 className="font-medium mb-3 flex items-center gap-2">
-                <span>👤</span>
                 <span>Cinsiyet</span>
               </h3>
               <div className="space-y-2">
@@ -175,7 +190,6 @@ const Products: React.FC = () => {
             {/* Category Filter */}
             <div className="mb-6">
               <h3 className="font-medium mb-3 flex items-center gap-2">
-                <span>📂</span>
                 <span>Kategoriler</span>
               </h3>
               <div className="space-y-2">
@@ -209,7 +223,6 @@ const Products: React.FC = () => {
             {/* Price Filter */}
             <div className="mb-6">
               <h3 className="font-medium mb-3 flex items-center gap-2">
-                <span>💰</span>
                 <span>Fiyat Aralığı</span>
               </h3>
               <div className="space-y-2">
@@ -238,13 +251,7 @@ const Products: React.FC = () => {
           </div>
         </aside>
 
-        {/* Mobile Filter Button */}
-        <button
-          onClick={() => setIsMobileFilterOpen(true)}
-          className="lg:hidden fixed bottom-4 right-4 bg-purple-600 text-white p-3 sm:p-4 rounded-full shadow-lg z-10"
-        >
-          <FiFilter size={20} />
-        </button>
+        {/* Mobile Filter Button - KALDIRILDI, artık header'da */}
 
         {/* Mobile Filter Drawer */}
         {isMobileFilterOpen && (
@@ -268,7 +275,6 @@ const Products: React.FC = () => {
                 {/* Mobile Gender Filter */}
                 <div className="mb-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <span>👤</span>
                     <span>Cinsiyet</span>
                   </h3>
                   <div className="space-y-2">
@@ -291,7 +297,6 @@ const Products: React.FC = () => {
                 {/* Mobile Category Filter */}
                 <div className="mb-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <span>📂</span>
                     <span>Kategoriler</span>
                   </h3>
                   <div className="space-y-2">
@@ -325,7 +330,6 @@ const Products: React.FC = () => {
                 {/* Mobile Price Filter */}
                 <div className="mb-6">
                   <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <span>💰</span>
                     <span>Fiyat Aralığı</span>
                   </h3>
                   <div className="space-y-2">
@@ -370,30 +374,51 @@ const Products: React.FC = () => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className={`flex-1 min-w-0 transition-all duration-300 ${
+          isDesktopFilterOpen ? 'lg:ml-0' : 'lg:ml-0'
+        }`}>
           {/* Header */}
           <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate">
-                  {searchParams.get('sale') === 'true' ? '🔥 İndirimli Ürünler' : 
-                   searchParams.get('gender') ? `${searchParams.get('gender')} Ürünleri` : 'Ürünler'}
-                </h1>
-                {pagination && (
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                    {pagination.totalItems} ürün bulundu
-                    {searchParams.get('sale') === 'true' && (
-                      <span className="ml-2 text-red-600 font-medium">
-                        • İndirimli ürünler
-                      </span>
-                    )}
-                    {searchParams.get('gender') && (
-                      <span className="ml-2 text-purple-600 font-medium">
-                        • {searchParams.get('gender')} kategorisi
-                      </span>
-                    )}
-                  </p>
-                )}
+              <div className="min-w-0 flex items-center gap-3">
+                {/* 🆕 Filter Toggle Button - Hem desktop hem mobile */}
+                <button
+                  onClick={() => {
+                    // Desktop için
+                    if (window.innerWidth >= 1024) {
+                      setIsDesktopFilterOpen(!isDesktopFilterOpen);
+                    } else {
+                      // Mobile için
+                      setIsMobileFilterOpen(true);
+                    }
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  <FiFilter size={16} />
+                  <span className="text-sm">Filtreler</span>
+                </button>
+                
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate">
+                    {searchParams.get('sale') === 'true' ? 'İndirimli Ürünler' : 
+                     searchParams.get('gender') ? `${searchParams.get('gender')} Ürünleri` : 'Ürünler'}
+                  </h1>
+                  {pagination && (
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                      {pagination.totalItems} ürün bulundu
+                      {searchParams.get('sale') === 'true' && (
+                        <span className="ml-2 text-red-600 font-medium">
+                          • İndirimli ürünler
+                        </span>
+                      )}
+                      {searchParams.get('gender') && (
+                        <span className="ml-2 text-purple-600 font-medium">
+                          • {searchParams.get('gender')} kategorisi
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Sort Dropdown */}
@@ -421,7 +446,7 @@ const Products: React.FC = () => {
               <div className="mt-3 sm:mt-4 flex flex-wrap gap-1 sm:gap-2">
                 {selectedGender && (
                   <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs sm:text-sm">
-                    👤 {selectedGender}
+                    {selectedGender}
                     <button
                       onClick={() => handleGenderChange('')}
                       className="ml-1 hover:text-purple-900"
@@ -432,7 +457,7 @@ const Products: React.FC = () => {
                 )}
                 {selectedCategory && categories.find(c => c.id.toString() === selectedCategory) && (
                   <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs sm:text-sm">
-                    📂 {categories.find(c => c.id.toString() === selectedCategory)?.name}
+                    {categories.find(c => c.id.toString() === selectedCategory)?.name}
                     <button
                       onClick={() => handleCategoryChange('')}
                       className="ml-1 hover:text-blue-900"
@@ -443,7 +468,7 @@ const Products: React.FC = () => {
                 )}
                 {searchParams.get('search') && (
                   <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs sm:text-sm">
-                    🔍 "{searchParams.get('search')}"
+                    "{searchParams.get('search')}"
                   </span>
                 )}
                 <button
@@ -484,7 +509,7 @@ const Products: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* 🚀 MOBİL OPTİMİZE GRİD - EN ÖNEMLİ DEĞİŞİKLİK! */}
+              {/* 🚀 MOBİL OPTİMİZE GRİD */}
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />

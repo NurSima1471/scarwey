@@ -17,6 +17,8 @@ const FiX = Icons.FiX as any;
 const FiChevronDown = Icons.FiChevronDown as any;
 const FiPackage = Icons.FiPackage as any;
 const FiSettings = Icons.FiSettings as any;
+const FiTrendingUp = Icons.FiTrendingUp as any;
+const FiHome = Icons.FiHome as any;
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -54,64 +56,48 @@ const Header: React.FC = () => {
     { 
       id: 'kadin', 
       name: 'Kadın', 
-      path: '/products?gender=Kadın',
-      icon: '👗'
+      path: '/products?gender=Kadın'
     },
     { 
       id: 'erkek', 
       name: 'Erkek', 
-      path: '/products?gender=Erkek',
-      icon: '👔'
+      path: '/products?gender=Erkek'
     },
     { 
       id: 'cocuk', 
       name: 'Çocuk', 
-      path: '/products?gender=Çocuk',
-      icon: '🧸'
+      path: '/products?gender=Çocuk'
     },
     { 
       id: 'unisex', 
       name: 'Unisex', 
-      path: '/products?gender=Uniseks',
-      icon: '👕'
+      path: '/products?gender=Uniseks'
     },
   ];
 
-  // Kategoriler için ikon helper
-  const getCategoryIcon = (categoryName: string) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('kadın') || name.includes('woman')) return '👗';
-    if (name.includes('erkek') || name.includes('man')) return '👔';
-    if (name.includes('elektronik') || name.includes('electronic')) return '📱';
-    if (name.includes('ev') || name.includes('home')) return '🏠';
-    if (name.includes('spor') || name.includes('sport')) return '⚽';
-    if (name.includes('çocuk') || name.includes('kid')) return '🧸';
-    if (name.includes('ayakkabı') || name.includes('shoe')) return '👟';
-    if (name.includes('aksesuar') || name.includes('accessory')) return '💎';
-    if (name.includes('teknoloji')) return '💻';
-    if (name.includes('sağlık')) return '🏥';
-    if (name.includes('kitap')) return '📚';
-    return '📦'; // Default ikon
+  // Kategoriler için ikon helper - Sadece text
+  const getCategoryIcon = () => {
+    return null; // İkon kullanmıyoruz
   };
 
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
+    <header className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100 w-full">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-center py-2 text-sm font-medium">
-        🎉 Ücretsiz kargo 1500₺ ve üzeri alışverişlerde! 🚚
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-center py-2 text-sm font-medium w-full">
+        Ücretsiz kargo 1500₺ ve üzeri alışverişlerde!
       </div>
 
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div className="w-full px-2 sm:px-4 max-w-none sm:max-w-7xl sm:mx-auto">
         {/* Main Header */}
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-2 sm:py-4 min-h-[60px]">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-1 md:space-x-2 group flex-shrink-0">
+          <Link to="/" className="flex items-center space-x-1 group flex-shrink-0 min-w-0">
             <img                  
               src="/swlogo.png"                  
               alt="Scarwey"                  
-              className="h-6 w-6 md:h-8 md:w-8 group-hover:scale-105 transition-transform duration-300"               
+              className="h-5 w-5 sm:h-8 sm:w-8 group-hover:scale-105 transition-transform duration-300"               
             />               
-            <span className="text-lg md:text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent">                 
+            <span className="text-base sm:text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-700 bg-clip-text text-transparent truncate">                 
               Scarwey               
             </span>
           </Link>
@@ -138,33 +124,38 @@ const Header: React.FC = () => {
           </div>
 
           {/* Mobile Search Bar */}
-          <div className="md:hidden flex-1 mx-2">
+          <div className="flex-1 mx-1 sm:mx-2 md:hidden">
             <form onSubmit={handleSearch} className="flex w-full">
-              <div className="relative flex w-full">
+              <div className="relative flex w-full min-w-0">
                 <input
                   type="text"
                   placeholder="Ara..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-l-md focus:border-orange-500 focus:outline-none bg-gray-50 focus:bg-white transition-all"
+                  className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-l-md focus:border-orange-500 focus:outline-none bg-gray-50 focus:bg-white transition-all min-w-0"
                 />
                 <button
                   type="submit"
-                  className="px-2 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-r-md hover:from-orange-600 hover:to-red-600 transition-all duration-300"
+                  className="px-2 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-r-md hover:from-orange-600 hover:to-red-600 transition-all duration-300 flex-shrink-0"
                 >
-                  <FiSearch size={14} />
+                  <FiSearch size={12} />
                 </button>
               </div>
             </form>
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-1 md:space-x-4 flex-shrink-0">
+          <div className="flex items-center space-x-1 flex-shrink-0">
             {/* User Account */}
             <div className="relative group">
-              <button className="flex items-center space-x-1 md:space-x-2 px-1 md:px-3 py-1 md:py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
-                  <FiUser className="text-white" size={12} />
+              <button 
+                className="flex items-center space-x-1 px-1 py-1 sm:px-3 sm:py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  setIsMobileMenuOpen(false); // Hamburger menüyü kapat
+                }}
+              >
+                <div className="w-5 h-5 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+                  <FiUser className="text-white" size={10} />
                 </div>
                 <div className="hidden lg:block text-left">
                   <div className="text-xs text-gray-500">
@@ -203,10 +194,7 @@ const Header: React.FC = () => {
                           </span>
                         )}
                       </Link>
-                      <button
-                        onClick={() => dispatch(toggleCart())}
-                        className="flex items-center px-4 py-3 text-sm hover:bg-gray-50 transition-colors w-full text-left"
-                      >
+                      <Link to="/cart" className="flex items-center px-4 py-3 text-sm hover:bg-gray-50 transition-colors">
                         <FiShoppingCart className="mr-3 text-gray-400" size={16} />
                         Sepetim
                         {cartItemCount > 0 && (
@@ -214,7 +202,7 @@ const Header: React.FC = () => {
                             {cartItemCount}
                           </span>
                         )}
-                      </button>
+                      </Link>
                       {isAdmin() && (
                         <Link to="/admin/dashboard" className="flex items-center px-4 py-3 text-sm hover:bg-blue-50 text-blue-600 transition-colors">
                           <FiSettings className="mr-3 text-blue-500" size={16} />
@@ -275,10 +263,12 @@ const Header: React.FC = () => {
 
             {/* Mobile Menu Toggle */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-1 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => {
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
+              className="md:hidden p-1.5 hover:bg-gray-50 rounded-lg transition-colors flex-shrink-0"
             >
-              {isMobileMenuOpen ? <FiX size={18} className="text-gray-600" /> : <FiMenu size={18} className="text-gray-600" />}
+              {isMobileMenuOpen ? <FiX size={16} className="text-gray-600" /> : <FiMenu size={16} className="text-gray-600" />}
             </button>
           </div>
         </div>
@@ -307,7 +297,6 @@ const Header: React.FC = () => {
                         to={`/products?categoryId=${category.id}`}
                         className="flex items-center px-4 py-3 text-sm text-gray-800 hover:bg-orange-50 hover:text-orange-600 transition-colors border-b border-gray-50 last:border-b-0"
                       >
-                        <span className="text-lg mr-3">{getCategoryIcon(category.name)}</span>
                         <span className="font-medium">{category.name}</span>
                       </Link>
                     ))}
@@ -336,9 +325,8 @@ const Header: React.FC = () => {
                 <li key={gender.id}>
                   <Link
                     to={gender.path}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 font-medium transition-colors relative group"
+                    className="text-gray-700 hover:text-orange-600 font-medium transition-colors relative group"
                   >
-                    <span className="text-lg">{gender.icon}</span>
                     <span>{gender.name}</span>
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300"></span>
                   </Link>
@@ -349,9 +337,9 @@ const Header: React.FC = () => {
             {/* 4. İndirimler - Sağ Tarafta */}
             <Link 
               to="/products?sale=true" 
-              className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full font-medium hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl animate-pulse"
+              className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full font-medium hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              <span>🔥</span>
+              <FiTrendingUp size={16} />
               <span>İndirimler</span>
             </Link>
           </div>
@@ -360,60 +348,38 @@ const Header: React.FC = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
-          <div className="container mx-auto px-4 py-4">
-            {/* Mobile Navigation */}
-            <div className="space-y-3">
+        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg absolute top-full left-0 right-0 z-50 w-full">
+          <div className="w-full px-2 sm:px-4 py-3 max-h-96 overflow-y-auto">
+            {/* Mobile Navigation - Kompakt Grid */}
+            <div className="grid grid-cols-2 gap-2 text-sm">
               {/* Ana Sayfa */}
               <Link
                 to="/"
-                className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors font-medium"
+                className="flex items-center py-2 px-3 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <span className="text-xl mr-3">🏠</span>
+                <FiHome className="mr-2" size={16} />
                 Ana Sayfa
               </Link>
 
               {/* Tüm Ürünler */}
               <Link
                 to="/products"
-                className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors font-medium"
+                className="flex items-center py-2 px-3 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <span className="text-xl mr-3">📦</span>
+                <FiPackage className="mr-2" size={16} />
                 Tüm Ürünler
               </Link>
-
-              {/* Kategoriler */}
-              <div className="py-3 border-b border-gray-100">
-                <div className="flex items-center mb-3">
-                  <FiMenu className="text-xl mr-3" />
-                  <span className="font-semibold text-gray-700">Kategoriler</span>
-                </div>
-                <div className="ml-8 space-y-2">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/products?categoryId=${category.id}`}
-                      className="flex items-center py-2 text-sm text-gray-600 hover:text-orange-600 transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <span className="text-lg mr-3">{getCategoryIcon(category.name)}</span>
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
               
               {/* Gender Kategorileri */}
               {genderCategories.map((gender) => (
                 <Link
                   key={gender.id}
                   to={gender.path}
-                  className="flex items-center py-3 text-gray-700 hover:text-orange-600 transition-colors font-medium"
+                  className="flex items-center py-2 px-3 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span className="text-xl mr-3">{gender.icon}</span>
                   {gender.name}
                 </Link>
               ))}
@@ -421,64 +387,32 @@ const Header: React.FC = () => {
               {/* İndirimler */}
               <Link
                 to="/products?sale=true"
-                className="flex items-center py-3 text-red-500 font-semibold"
+                className="flex items-center py-2 px-3 text-red-500 hover:bg-red-50 rounded-lg font-semibold"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <span className="text-xl mr-3">🔥</span>
+                <FiTrendingUp className="mr-2" size={16} />
                 İndirimler
               </Link>
-
-              {/* Mobile Wishlist */}
-              <Link
-                to="/wishlist"
-                className="flex items-center justify-between py-3 text-gray-700 hover:text-orange-600 transition-colors border-t border-gray-100 mt-4 pt-4"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="flex items-center">
-                  <FiHeart className="mr-3" size={20} />
-                  Favorilerim
-                </div>
-                {wishlistItems.length > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {wishlistItems.length}
-                  </span>
-                )}
-              </Link> {/* Mobile Wishlist */}
-              <Link
-                to="/wishlist"
-                className="flex items-center justify-between py-3 text-gray-700 hover:text-orange-600 transition-colors border-t border-gray-100 mt-4 pt-4"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="flex items-center">
-                  <FiHeart className="mr-3" size={20} />
-                  Favorilerim
-                </div>
-                {wishlistItems.length > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {wishlistItems.length}
-                  </span>
-                )}
-              </Link>
-
-              {/* Mobile Cart */}
-              <button
-                onClick={() => {
-                  dispatch(toggleCart());
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center justify-between py-3 text-gray-700 hover:text-orange-600 transition-colors w-full text-left"
-              >
-                <div className="flex items-center">
-                  <FiShoppingCart className="mr-3" size={20} />
-                  Sepetim
-                </div>
-                {cartItemCount > 0 && (
-                  <span className="bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
-              </button>
             </div>
+
+            {/* Kategoriler - Sadece 4 tane göster */}
+            {categories.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="text-xs font-semibold text-gray-500 mb-2">Popüler Kategoriler</div>
+                <div className="grid grid-cols-2 gap-1 text-xs">
+                  {categories.slice(0, 4).map((category) => (
+                    <Link
+                      key={category.id}
+                      to={`/products?categoryId=${category.id}`}
+                      className="py-1 px-2 text-gray-600 hover:text-orange-600 transition-colors truncate"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

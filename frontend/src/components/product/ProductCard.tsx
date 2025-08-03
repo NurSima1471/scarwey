@@ -171,14 +171,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
           
           {/* 📱 Product Name - Mobilde tek satır */}
-          <h3 className="font-semibold text-sm sm:text-lg mb-1 sm:mb-2 text-gray-800 line-clamp-1 sm:line-clamp-2 group-hover:text-purple-600 transition-colors flex-1">
+          <h3 className="font-semibold text-sm sm:text-lg mb-2 sm:mb-3 text-gray-800 line-clamp-1 sm:line-clamp-2 group-hover:text-purple-600 transition-colors flex-1">
             {product.name}
           </h3>
-          
-          {/* Description - Sadece desktop'ta göster */}
-          <p className="hidden sm:block text-gray-600 text-sm mb-3 line-clamp-2">
-            {product.description}
-          </p>
 
           {/* 📱 Size Info - Mobilde daha kompakt */}
           {product.hasSizes && product.variants && product.variants.length > 0 && (
@@ -240,19 +235,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 disabled={cartLoading}
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 text-xs sm:text-sm font-medium transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
               >
-                {product.hasSizes && product.variants?.length ? (
-                  <>
-                    <FiEye size={12} className="sm:size-4" />
-                    <span className="hidden sm:inline">İncele</span>
-                    <span className="sm:hidden">İncele</span>
-                  </>
-                ) : (
-                  <>
-                    <FiShoppingCart size={12} className="sm:size-4" />
-                    <span className="hidden sm:inline">Sepete Ekle</span>
-                    <span className="sm:hidden">Sepet</span>
-                  </>
-                )}
+                <FiShoppingCart size={12} className="sm:size-4" />
+                <span className="hidden sm:inline">Sepete Ekle</span>
+                <span className="sm:hidden">Sepet</span>
               </button>
             ) : (
               <button
