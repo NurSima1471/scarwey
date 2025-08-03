@@ -376,6 +376,11 @@ namespace ECommerce.API.Services
         public async Task SendRefundRequestNotificationToAdminAsync(string orderNumber, string reason, decimal amount)
         {
             var adminEmail = _configuration["EmailSettings:AdminEmail"];
+            if (string.IsNullOrEmpty(adminEmail))
+            {
+                _logger.LogWarning("Admin email is not configured. Refund notification email cannot be sent.");
+                return;
+            }
             var subject = $"🔔 Yeni İade Talebi - #{orderNumber}";
 
             var body = $@"

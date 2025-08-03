@@ -54,7 +54,7 @@ namespace ECommerce.API.Controllers
         {
             return await _context.Categories
                 .Include(c => c.SubCategories)
-                .Include(c => c.Products.Where(p => p.IsActive)) // 🆕 Sadece aktif ürünleri dahil et
+                .Include(c => c.Products!.Where(p => p.IsActive)) // 🆕 Sadece aktif ürünleri dahil et
                 .Where(c => c.ParentCategoryId == null) // Ana kategoriler
                 .ToListAsync(); // IsActive filtresi YOK
         }
@@ -67,8 +67,8 @@ namespace ECommerce.API.Controllers
             try
             {
                 var category = await _context.Categories
-                    .Include(c => c.Products.Where(p => p.IsActive))
-                    .Include(c => c.SubCategories.Where(sc => sc.IsActive))
+                    .Include(c => c.Products!.Where(p => p.IsActive))
+                    .Include(c => c.SubCategories!.Where(sc => sc.IsActive))
                     .FirstOrDefaultAsync(c => c.Id == id);
 
                 if (category == null)

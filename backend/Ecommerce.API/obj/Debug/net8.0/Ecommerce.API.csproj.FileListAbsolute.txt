@@ -374,6 +374,7 @@ C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.csproj.CoreCompileInputs.cache
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.sourcelink.json
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\staticwebassets\msbuild.Ecommerce.API.Microsoft.AspNetCore.StaticWebAssets.props
@@ -388,4 +389,3 @@ C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.pdb
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.genruntimeconfig.cache
 C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\ref\Ecommerce.API.dll
-C:\Users\alper\Downloads\scarwey-main (1)\scarwey-main\backend\Ecommerce.API\obj\Debug\net8.0\Ecommerce.API.sourcelink.json

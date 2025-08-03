@@ -134,7 +134,7 @@ namespace ECommerce.API.Services
                 return await _context.Products
                     .Include(p => p.Images)
                     .Include(p => p.Category)
-                    .Include(p => p.Variants.Where(v => v.IsActive && v.IsAvailable)) // 🆕 Aktif varyantları dahil et
+                    .Include(p => p.Variants!.Where(v => v.IsActive && v.IsAvailable)) // 🆕 Aktif varyantları dahil et
                     .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
             }
             catch (Exception ex)
@@ -150,7 +150,7 @@ namespace ECommerce.API.Services
             {
                 return await _context.Products
                     .Include(p => p.Images)
-                    .Include(p => p.Variants.Where(v => v.IsActive && v.IsAvailable))
+                    .Include(p => p.Variants!.Where(v => v.IsActive && v.IsAvailable))
                     .Where(p => p.IsActive && p.IsFeatured)
                     .Take(count)
                     .ToListAsync();

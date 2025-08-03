@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ECommerce.API.Data;
 using ECommerce.API.Models;
 using ECommerce.API.Services.Interfaces;
-
+#pragma warning disable CS8602
 namespace ECommerce.API.Controllers
 {
     [Route("api/[controller]")]
@@ -376,7 +376,10 @@ namespace ECommerce.API.Controllers
                     user.IsActive,
                     // ✅ NULL CHECK (Satır 348 uyarısı düzeltildi)
                     OrderCount = user.Orders?.Count ?? 0,
-                    TotalSpent = user.Orders?.Where(o => o.Status != OrderStatus.Cancelled).Sum(o => o.TotalAmount) ?? 0,
+                    // Satır 350 civarında:
+#pragma warning disable CS8602
+                    TotalSpent = user.Orders?.Where(o => o.Status != OrderStatus.Cancelled)?.Sum(o => o.TotalAmount) ?? 0m,
+#pragma warning restore CS8602
                     Roles = roles.ToList()
                 });
             }

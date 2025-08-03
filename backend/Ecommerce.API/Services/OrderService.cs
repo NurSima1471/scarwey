@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ECommerce.API.Data;
 using ECommerce.API.Models;
 using ECommerce.API.Services.Interfaces;
-
+#pragma warning disable CS8620
 namespace ECommerce.API.Services
 {
     public class OrderService : IOrderService
@@ -262,10 +262,12 @@ namespace ECommerce.API.Services
             try
             {
                 // ✅ NULL-SAFE THENINCLUDE (Satır 214 uyarısı düzeltildi)
+#pragma warning disable CS8620
                 return await _context.Orders
-                    .Include(o => o.OrderItems!)
-                        .ThenInclude(oi => oi.Product!)
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Product)
                     .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
+#pragma warning restore CS8620
             }
             catch (Exception ex)
             {
@@ -482,15 +484,15 @@ namespace ECommerce.API.Services
             }
         }
 
-        public async Task<bool> ValidateOrderAsync(Order order)
+        public Task<bool> ValidateOrderAsync(Order order)
         {
             // Implement order validation logic
-            if (order == null) return false;
-            if (order.OrderItems == null || !order.OrderItems.Any()) return false;
-            if (order.TotalAmount <= 0) return false;
-            if (string.IsNullOrEmpty(order.ShippingAddress)) return false;
+            if (order == null) return Task.FromResult(false);
+            if (order.OrderItems == null || !order.OrderItems.Any()) return Task.FromResult(false);
+            if (order.TotalAmount <= 0) return Task.FromResult(false);
+            if (string.IsNullOrEmpty(order.ShippingAddress)) return Task.FromResult(false);
 
-            return true;
+            return Task.FromResult(true);
         }
 
         public async Task<decimal> CalculateOrderTotalAsync(int orderId)
