@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as Icons from 'react-icons/fi';
 import api from '../../services/api';
 import { Product, Category, ProductVariant } from '../../types';
+import CategorySelector from './CategorySelector';
 
 const FiX = Icons.FiX as any;
 const FiSave = Icons.FiSave as any;
@@ -78,7 +79,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     sortOrder: 0,
   });
 
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'variants'>('basic');
 
@@ -149,7 +150,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       });
       setVariants([]);
     }
-    
+
     setFormErrors({});
     setNewVariant({
       size: '',
@@ -203,7 +204,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   // 🆕 Beden güncelleme
   const handleUpdateVariant = (index: number, field: keyof ProductVariantFormData, value: any) => {
-    const updatedVariants = variants.map((variant, i) => 
+    const updatedVariants = variants.map((variant, i) =>
       i === index ? { ...variant, [field]: value } : variant
     );
     setVariants(updatedVariants);
@@ -221,7 +222,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       sortOrder: variants.length + index,
     }));
 
-    const uniqueVariants = newVariants.filter(newV => 
+    const uniqueVariants = newVariants.filter(newV =>
       !variants.some(existingV => existingV.size === newV.size)
     );
 
@@ -237,7 +238,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
 
     if (!formData.name.trim()) {
       errors.name = 'Ürün adı gereklidir';
@@ -291,7 +292,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
 
     setFormErrors(errors);
-    
+
     const basicErrors = ['name', 'description', 'price', 'discountPrice', 'stockQuantity', 'sku', 'brand', 'categoryId'];
     const hasBasicErrors = basicErrors.some(field => errors[field]);
     if (hasBasicErrors && activeTab !== 'basic') {
@@ -303,7 +304,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setSaving(true);
@@ -329,27 +330,27 @@ const ProductForm: React.FC<ProductFormProps> = ({
           ...productData,
           id: editingProduct.id,
         });
-        
+
         savedProduct = response.data || editingProduct;
         productId = editingProduct.id;
-        
+
         console.log('✅ Product updated, ID:', productId);
       } else {
         const response = await api.post(baseUrl, productData);
         savedProduct = response.data;
         productId = savedProduct.id;
-        
+
         console.log('✅ Product created, ID:', productId);
       }
 
       // 🆕 GÜNCELLENMIŞ VARIANT YÖNETIMI
       if (formData.hasSizes && variants.length > 0) {
         console.log('🔧 Processing variants for product ID:', productId);
-        
+
         // Önce mevcut variant'ları sil (düzenleme durumunda)
         if (editingProduct && editingProduct.variants) {
           console.log('🗑️ Deleting existing variants:', editingProduct.variants.length);
-          
+
           // Her variant'ı tek tek sil ve sonucu logla
           const deletePromises = editingProduct.variants.map(async (variant, index) => {
             try {
@@ -358,7 +359,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 size: variant.size,
                 productId: variant.productId
               });
-              
+
               await api.delete(`/products/variants/${variant.id}`);
               console.log(`✅ [${index + 1}] Deleted variant:`, variant.size);
               return { success: true, variant };
@@ -371,14 +372,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
               return { success: false, variant, error };
             }
           });
-          
+
           // Tüm silme işlemlerinin tamamlanmasını bekle
           const deleteResults = await Promise.all(deletePromises);
           const successCount = deleteResults.filter(result => result.success).length;
           const failCount = deleteResults.filter(result => !result.success).length;
-          
+
           console.log(`📊 Variant silme sonucu: ${successCount} başarılı, ${failCount} başarısız`);
-          
+
           if (failCount > 0) {
             console.warn('⚠️ Bazı variantlar silinemedi, devam ediliyor...');
             deleteResults
@@ -387,7 +388,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 console.warn('⚠️ Silinemedi:', result.variant.size, result.error);
               });
           }
-          
+
           // Database işleminin tamamlanması için bekle
           console.log('⏳ Database işlemi için 1 saniye bekleniyor...');
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -396,7 +397,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         // Yeni variant'ları ekle
         console.log('➕ Adding new variants:', variants.length);
         const addResults = [];
-        
+
         for (let i = 0; i < variants.length; i++) {
           const variant = variants[i];
           if (variant.isAvailable) {
@@ -413,17 +414,17 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 CreatedAt: new Date().toISOString(),
                 UpdatedAt: new Date().toISOString()
               };
-              
+
               console.log(`➕ [${i + 1}/${variants.length}] Adding variant:`, variant.size);
               console.log('📤 Variant data:', JSON.stringify(variantData, null, 2));
-              
+
               const variantResponse = await api.post(`/products/${productId}/variants`, variantData);
-              
+
               console.log(`✅ [${i + 1}] SUCCESS - Added variant:`, variant.size);
               console.log('📥 Response:', variantResponse.data);
-              
+
               addResults.push({ success: true, variant, response: variantResponse.data });
-              
+
             } catch (error: any) {
               console.error(`❌ [${i + 1}] VARIANT EKLEME HATASI:`, variant.size);
               console.error('🔍 Error details:', {
@@ -431,9 +432,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 data: error.response?.data,
                 url: `/products/${productId}/variants`
               });
-              
+
               addResults.push({ success: false, variant, error: error.response?.data });
-              
+
               // 400 hatası ise alternatif format dene
               if (error.response?.status === 400) {
                 console.log(`🔄 [${i + 1}] Trying alternative camelCase format for:`, variant.size);
@@ -446,39 +447,39 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     isAvailable: variant.isAvailable,
                     sortOrder: variant.sortOrder,
                   };
-                  
+
                   console.log('📤 Alternative data:', JSON.stringify(altData, null, 2));
                   const altResponse = await api.post(`/products/${productId}/variants`, altData);
-                  
+
                   console.log(`✅ [${i + 1}] SUCCESS via alternative format:`, variant.size);
                   addResults[addResults.length - 1] = { success: true, variant, response: altResponse.data };
-                  
+
                 } catch (altError: any) {
                   console.error(`❌ [${i + 1}] Alternative format de başarısız:`, variant.size);
                   console.error('🔍 Alt Error:', altError.response?.data);
                 }
               }
-              
+
               console.warn(`⚠️ [${i + 1}] Bu variant başarısız, devam ediliyor...`);
             }
           } else {
             console.log(`⏭️ [${i + 1}] Skipping inactive variant:`, variant.size);
           }
         }
-        
+
         // Sonuçları özetle
         const addSuccessCount = addResults.filter(r => r.success).length;
         const addFailCount = addResults.filter(r => !r.success).length;
-        
+
         console.log(`📊 Variant ekleme sonucu: ${addSuccessCount} başarılı, ${addFailCount} başarısız`);
-        
+
         if (addFailCount > 0) {
           console.warn('⚠️ Başarısız variantlar:');
           addResults
             .filter(r => !r.success)
             .forEach(r => console.warn('  -', r.variant.size, r.error));
         }
-        
+
       } else if (editingProduct && editingProduct.hasSizes && !formData.hasSizes) {
         // Eğer ürün bedensiz yapılıyorsa, mevcut variant'ları sil
         console.log('🗑️ Product changed to non-sized, deleting variants');
@@ -497,8 +498,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
       onClose();
     } catch (error: any) {
       console.error('Error saving product:', error);
-      setFormErrors({ 
-        submit: error.response?.data?.message || 'Ürün kaydedilirken hata oluştu' 
+      setFormErrors({
+        submit: error.response?.data?.message || 'Ürün kaydedilirken hata oluştu'
       });
     } finally {
       setSaving(false);
@@ -527,21 +528,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab('basic')}
-              className={`py-4 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'basic'
+              className={`py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === 'basic'
                   ? 'text-purple-600 border-purple-600'
                   : 'text-gray-500 border-transparent hover:text-gray-700'
-              }`}
+                }`}
             >
               Temel Bilgiler
             </button>
             <button
               onClick={() => setActiveTab('variants')}
-              className={`py-4 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'variants'
+              className={`py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === 'variants'
                   ? 'text-purple-600 border-purple-600'
                   : 'text-gray-500 border-transparent hover:text-gray-700'
-              }`}
+                }`}
             >
               Beden Yönetimi
               {formData.hasSizes && variants.length > 0 && (
@@ -608,9 +607,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Ürün adını girin"
                   />
                   {formErrors.name && (
@@ -627,9 +625,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.description ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.description ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Ürün açıklaması"
                   />
                   {formErrors.description && (
@@ -648,9 +645,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.price ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.price ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="0.00"
                   />
                   {formErrors.price && (
@@ -668,13 +664,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     min="0"
                     step="0.01"
                     value={formData.discountPrice || ''}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      discountPrice: e.target.value ? parseFloat(e.target.value) : undefined 
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      discountPrice: e.target.value ? parseFloat(e.target.value) : undefined
                     })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.discountPrice ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.discountPrice ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="İsteğe bağlı"
                   />
                   {formErrors.discountPrice && (
@@ -726,7 +721,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     </label>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {formData.hasSizes 
+                    {formData.hasSizes
                       ? 'Beden Yönetimi sekmesinden bedenleri ekleyebilirsiniz'
                       : 'Sadece genel stok miktarı kullanılacak'
                     }
@@ -744,9 +739,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       min="0"
                       value={formData.stockQuantity}
                       onChange={(e) => setFormData({ ...formData, stockQuantity: parseInt(e.target.value) || 0 })}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                        formErrors.stockQuantity ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.stockQuantity ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="0"
                     />
                     {formErrors.stockQuantity && (
@@ -779,9 +773,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     type="text"
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.sku ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.sku ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Ürün kodu"
                   />
                   {formErrors.sku && (
@@ -798,9 +791,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     type="text"
                     value={formData.brand}
                     onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.brand ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.brand ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Marka adı"
                   />
                   {formErrors.brand && (
@@ -808,29 +800,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   )}
                 </div>
 
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori *
-                  </label>
-                  <select
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: parseInt(e.target.value) })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">Kategori seçin</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {formErrors.categoryId && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.categoryId}</p>
-                  )}
-                </div>
+                {/* Category - New Hierarchical Selector */}
+                <CategorySelector
+                  selectedCategoryId={formData.categoryId}
+                  onCategoryChange={(categoryId) => {
+                    setFormData({ ...formData, categoryId: categoryId || 0 });
+                    // Error'u temizle
+                    if (formErrors.categoryId) {
+                      setFormErrors({ ...formErrors, categoryId: '' });
+                    }
+                  }}
+                  error={formErrors.categoryId}
+                  disabled={saving}
+                  mainCategories={categories}
+                />
               </div>
 
               {/* Checkboxes */}
@@ -934,9 +917,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           type="text"
                           value={newVariant.size}
                           onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })}
-                          className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                            formErrors.variantSize ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.variantSize ? 'border-red-500' : 'border-gray-300'
+                            }`}
                           placeholder="M, L, 42, vs."
                         />
                       </div>
@@ -1029,9 +1011,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         {variants.map((variant, index) => (
                           <div
                             key={index}
-                            className={`p-3 border rounded-lg ${
-                              variant.isAvailable ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200 opacity-60'
-                            }`}
+                            className={`p-3 border rounded-lg ${variant.isAvailable ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200 opacity-60'
+                              }`}
                           >
                             <div className="grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
                               <div>
@@ -1096,7 +1077,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                 </button>
                               </div>
                             </div>
-                            
+
                             {/* Variant Summary */}
                             <div className="mt-2 pt-2 border-t border-gray-100">
                               <div className="flex items-center justify-between text-xs text-gray-600">

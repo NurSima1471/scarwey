@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'react-icons/fi';
 import api from '../../services/api';
 import { Product, ProductImage, Category, PaginatedResponse } from '../../types';
-import ProductForm from '../../components/forms/ProductForm'; // 🆕 YENİ IMPORT
+import ProductForm from '../../components/forms/ProductForm';
 
 const FiPackage = Icons.FiPackage as any;
 const FiPlus = Icons.FiPlus as any;
@@ -19,7 +19,7 @@ const FiChevronRight = Icons.FiChevronRight as any;
 const FiEye = Icons.FiEye as any;
 const FiUpload = Icons.FiUpload as any;
 const FiCheck = Icons.FiCheck as any;
-const FiUser = Icons.FiUser as any; // 🆕 Gender ikonu için
+const FiUser = Icons.FiUser as any;
 
 const getImageUrl = (imageUrl?: string) => {
   if (!imageUrl) return 'https://placehold.co/80x80?text=No+Image';
@@ -30,17 +30,18 @@ const getImageUrl = (imageUrl?: string) => {
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]); // 🆕 Tüm kategoriler
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [tempSearchQuery, setTempSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
-  const [genderFilter, setGenderFilter] = useState<string>(''); // 🆕 YENİ FILTER
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'featured' | 'low-stock' | 'has-sizes'>('all'); // 🆕 has-sizes eklendi
+  const [genderFilter, setGenderFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'featured' | 'low-stock' | 'has-sizes'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false); // 🆕 ProductForm için
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,7 +55,6 @@ const ProductManagement: React.FC = () => {
 
   const pageSize = 10;
 
-  // 🆕 Gender seçenekleri
   const genderOptions = [
     { value: '', label: 'Tüm Cinsiyetler' },
     { value: 'Erkek', label: 'Erkek' },
@@ -66,16 +66,54 @@ const ProductManagement: React.FC = () => {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [currentPage, categoryFilter, genderFilter, statusFilter]); // 🆕 genderFilter eklendi
+  }, [currentPage, categoryFilter, genderFilter, statusFilter]);
 
+  // 🆕 GÜNCELLENMIŞ fetchCategories
   const fetchCategories = async () => {
     try {
+      // Ana kategoriler (ProductForm için)
       const response = await api.get<Category[]>('/categories/admin/all');
       setCategories(response.data);
+      
+      // 🆕 TÜM kategoriler (hierarchical - kategori isimleri için)
+      const hierarchicalResponse = await api.get('/categories/hierarchical');
+      const flatCategories: Category[] = [];
+      
+      // Hierarchical yapıyı flat array'e çevir
+      hierarchicalResponse.data.forEach((mainCat: any) => {
+        // Ana kategoriyi ekle
+        flatCategories.push({
+          id: mainCat.id,
+          name: mainCat.name,
+          description: mainCat.description,
+          parentCategoryId: undefined, // null yerine undefined
+          isActive: true
+          
+        });
+        
+        // Alt kategorileri ekle
+        if (mainCat.subCategories && mainCat.subCategories.length > 0) {
+          mainCat.subCategories.forEach((subCat: any) => {
+            flatCategories.push({
+              id: subCat.id,
+              name: subCat.name,
+              description: subCat.description,
+              parentCategoryId: subCat.parentCategoryId,
+              isActive: true
+              
+            });
+          });
+        }
+      });
+      
+      setAllCategories(flatCategories);
+      
     } catch (error) {
+      // Fallback: Sadece ana kategoriler
       try {
         const response = await api.get<Category[]>('/categories');
         setCategories(response.data);
+        setAllCategories(response.data);
       } catch (fallbackError) {
         console.error('Error fetching categories:', error);
       }
@@ -114,7 +152,7 @@ const ProductManagement: React.FC = () => {
 
       if (query.trim()) params.append('search', query.trim());
       if (categoryFilter) params.append('categoryId', categoryFilter.toString());
-      if (genderFilter) params.append('gender', genderFilter); // 🆕 YENİ
+      if (genderFilter) params.append('gender', genderFilter);
 
       const response = await api.get<PaginatedResponse<Product>>(`/products?${params}`);
       
@@ -132,7 +170,7 @@ const ProductManagement: React.FC = () => {
               return product.isFeatured;
             case 'low-stock':
               return product.stockQuantity <= 10;
-            case 'has-sizes': // 🆕 YENİ FILTER
+            case 'has-sizes':
               return product.hasSizes;
             default:
               return true;
@@ -157,13 +195,12 @@ const ProductManagement: React.FC = () => {
     setSearchQuery('');
     setTempSearchQuery('');
     setCategoryFilter(null);
-    setGenderFilter(''); // 🆕 YENİ
+    setGenderFilter('');
     setStatusFilter('all');
     setCurrentPage(1);
     setTimeout(() => fetchProducts(), 100);
   };
 
-  // 🆕 GÜNCELLENMIŞ - ProductForm kullanımı
   const openModal = (product?: Product) => {
     setEditingProduct(product || null);
     setIsModalOpen(true);
@@ -193,7 +230,7 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  // Image Management Functions (unchanged)
+  // Image Management Functions
   const openImageModal = (product: Product) => {
     setImageProduct(product);
     setNewImageAlt('');
@@ -379,9 +416,17 @@ const ProductManagement: React.FC = () => {
     }
   };
 
+  // 🆕 GÜNCELLENMIŞ getCategoryName
   const getCategoryName = (categoryId: number): string => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : 'Bilinmeyen';
+    // Önce allCategories'de ara (hem ana hem alt kategoriler)
+    const category = allCategories.find(c => c.id === categoryId);
+    if (category) {
+      return category.name;
+    }
+    
+    // Fallback: eski categories array'inde ara
+    const fallbackCategory = categories.find(c => c.id === categoryId);
+    return fallbackCategory ? fallbackCategory.name : 'Bilinmeyen';
   };
 
   const handlePageChange = (page: number) => {
@@ -481,14 +526,14 @@ const ProductManagement: React.FC = () => {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value="">Tüm Kategoriler</option>
-              {categories.map(category => (
+              {allCategories.map(category => (
                 <option key={category.id} value={category.id}>
-                  {category.name}
+                  {category.parentCategoryId ? `  → ${category.name}` : category.name}
                 </option>
               ))}
             </select>
 
-            {/* 🆕 Gender Filter */}
+            {/* Gender Filter */}
             <select
               value={genderFilter}
               onChange={(e) => {
@@ -512,7 +557,7 @@ const ProductManagement: React.FC = () => {
                 { value: 'inactive', label: 'Pasif', color: 'bg-red-100 text-red-700' },
                 { value: 'featured', label: 'Öne Çıkan', color: 'bg-yellow-100 text-yellow-700' },
                 { value: 'low-stock', label: 'Düşük Stok', color: 'bg-orange-100 text-orange-700' },
-                { value: 'has-sizes', label: 'Bedenlı', color: 'bg-blue-100 text-blue-700' }, // 🆕 YENİ
+                { value: 'has-sizes', label: 'Bedenlı', color: 'bg-blue-100 text-blue-700' },
               ].map(filter => (
                 <button
                   key={filter.value}
@@ -633,7 +678,6 @@ const ProductManagement: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{getCategoryName(product.categoryId)}</div>
-                          {/* 🆕 Gender Display */}
                           {product.gender && (
                             <div className="flex items-center gap-1 mt-1">
                               <FiUser size={12} className="text-purple-500" />
@@ -656,7 +700,6 @@ const ProductManagement: React.FC = () => {
                             <span className={`px-2 py-1 text-xs rounded-full ${stockStatus.color}`}>
                               {product.stockQuantity} adet
                             </span>
-                            {/* 🆕 Size Info */}
                             {product.hasSizes && (
                               <div className="flex items-center gap-1">
                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
@@ -762,7 +805,7 @@ const ProductManagement: React.FC = () => {
         )}
       </div>
 
-      {/* 🆕 ProductForm Modal */}
+      {/* ProductForm Modal */}
       <ProductForm
         isOpen={isModalOpen}
         onClose={closeModal}
@@ -772,7 +815,7 @@ const ProductManagement: React.FC = () => {
         userRole="admin"
       />
 
-      {/* Image Management Modal (unchanged) */}
+      {/* Image Management Modal */}
       {isImageModalOpen && imageProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">

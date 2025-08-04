@@ -29,7 +29,95 @@ namespace ECommerce.API.Controllers
                 .Where(c => c.ParentCategoryId == null) // Ana kategoriler
                 .ToListAsync();
         }
+        // GET: api/categories/{parentId}/subcategories - Alt kategorileri getir
+        [HttpGet("{parentId}/subcategories")]
+        public async Task<ActionResult<IEnumerable<Category>>> GetSubCategories(int parentId)
+        {
+            try
+            {
+                // Ana kategorinin var olup olmadığını kontrol et
+                var parentExists = await _context.Categories
+                    .AnyAsync(c => c.Id == parentId && c.IsActive);
 
+                if (!parentExists)
+                {
+                    return NotFound(new { message = "Ana kategori bulunamadı" });
+                }
+
+                // Alt kategorileri getir
+                var subCategories = await _context.Categories
+                    .Where(c => c.ParentCategoryId == parentId && c.IsActive)
+                    .Select(c => new Category
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                        ParentCategoryId = c.ParentCategoryId,
+                        IsActive = c.IsActive,
+                        CreatedAt = c.CreatedAt,
+                        UpdatedAt = c.UpdatedAt
+                    })
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
+                _logger.LogInformation("Alt kategoriler getirildi: ParentId={ParentId}, Count={Count}",
+                    parentId, subCategories.Count);
+
+                return Ok(subCategories);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Alt kategoriler getirilirken hata oluştu: ParentId={ParentId}", parentId);
+                return StatusCode(500, new { message = "Alt kategoriler yüklenirken hata oluştu" });
+            }
+        }
+
+        // 🆕 BONUS: Tüm kategorileri hierarchical yapıda getiren endpoint (ürün ekleme için kullanılabilir)
+        [HttpGet("hierarchical")]
+        public async Task<ActionResult<IEnumerable<object>>> GetHierarchicalCategories()
+        {
+            try
+            {
+                var categories = await _context.Categories
+                    .Where(c => c.IsActive)
+                    .Include(c => c.SubCategories!.Where(sc => sc.IsActive))
+                    .Where(c => c.ParentCategoryId == null) // Ana kategoriler
+                    .OrderBy(c => c.Name)
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Name,
+                        c.Description,
+                        ParentCategoryId = (int?)null,
+                        IsParent = true,
+                        SubCategories = c.SubCategories!
+                            .Where(sc => sc.IsActive)
+                            .OrderBy(sc => sc.Name)
+                            .Select(sc => new
+                            {
+                                sc.Id,
+                                sc.Name,
+                                sc.Description,
+                                sc.ParentCategoryId,
+                                IsParent = false
+                            })
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Hierarchical kategoriler getirildi: MainCategories={MainCount}, " +
+                    "TotalSubCategories={SubCount}",
+                    categories.Count,
+                    categories.Sum(c => c.SubCategories.Count));
+
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Hierarchical kategoriler getirilirken hata oluştu");
+                return StatusCode(500, new { message = "Kategoriler yüklenirken hata oluştu" });
+            }
+        }
         // GET: api/categories/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)

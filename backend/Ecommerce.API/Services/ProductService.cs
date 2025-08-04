@@ -19,16 +19,16 @@ namespace ECommerce.API.Services
         // ProductService.cs - GetProductsAsync metodunu güncelle
 
         public async Task<(IEnumerable<Product> products, int totalItems)> GetProductsAsync(
-            int page,
-            int pageSize,
-            string? search,
-            int? categoryId,
-            decimal? minPrice,
-            decimal? maxPrice,
-            string? sortBy,
-            bool? featured = null,
-            bool? sale = null,
-            string? gender = null)
+     int page,
+     int pageSize,
+     string? search,
+     int? categoryId,
+     decimal? minPrice,
+     decimal? maxPrice,
+     string? sortBy,
+     bool? featured = null,
+     bool? sale = null,
+     string? gender = null)
         {
             try
             {
@@ -51,13 +51,48 @@ namespace ECommerce.API.Services
                         p.Brand.ToLower().Contains(search.ToLower()));
                 }
 
+                // 🆕 GÜNCELLENMIŞ HİERARCHİCAL KATEGORİ FİLTRELEME
                 if (categoryId.HasValue)
                 {
-                    _logger.LogInformation("📂 Applying category filter: {CategoryId}", categoryId.Value);
-                    query = query.Where(p => p.CategoryId == categoryId.Value);
+                    _logger.LogInformation("📂 Applying hierarchical category filter: {CategoryId}", categoryId.Value);
+
+                    // Seçilen kategoriyi kontrol et
+                    var selectedCategory = await _context.Categories
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(c => c.Id == categoryId.Value);
+
+                    if (selectedCategory != null)
+                    {
+                        if (selectedCategory.ParentCategoryId == null)
+                        {
+                            // Ana kategori seçildi - hem kendisi hem alt kategorilerini dahil et
+                            var categoryIds = await _context.Categories
+                                .Where(c => c.Id == categoryId.Value || c.ParentCategoryId == categoryId.Value)
+                                .Where(c => c.IsActive)
+                                .Select(c => c.Id)
+                                .ToListAsync();
+
+                            _logger.LogInformation("📂 Main category selected. Including subcategories: {CategoryIds}",
+                                string.Join(", ", categoryIds));
+
+                            query = query.Where(p => categoryIds.Contains(p.CategoryId));
+                        }
+                        else
+                        {
+                            // Alt kategori seçildi - sadece o kategori
+                            _logger.LogInformation("📂 Subcategory selected. Filtering by single category: {CategoryId}", categoryId.Value);
+                            query = query.Where(p => p.CategoryId == categoryId.Value);
+                        }
+                    }
+                    else
+                    {
+                        // Kategori bulunamadı - normal tek kategori filtrelemesi yap
+                        _logger.LogWarning("📂 Category not found: {CategoryId}. Applying simple filter.", categoryId.Value);
+                        query = query.Where(p => p.CategoryId == categoryId.Value);
+                    }
                 }
 
-                // 🆕 Gender filtresi
+                // Gender filtresi (değişiklik yok)
                 if (!string.IsNullOrWhiteSpace(gender))
                 {
                     _logger.LogInformation("👤 Applying gender filter: {Gender}", gender);
@@ -91,16 +126,16 @@ namespace ECommerce.API.Services
                         p.DiscountPrice.Value < p.Price);
                 }
 
-                // ✅ GELİŞTİRİLMİŞ SORTING - Discount sort eklendi
+                // Sorting (değişiklik yok)
                 _logger.LogInformation("📊 Applying sort: {SortBy}", sortBy);
                 query = sortBy?.ToLower() switch
                 {
-                    "price" => query.OrderBy(p => p.DiscountPrice ?? p.Price), // İndirimli fiyat varsa onu kullan
+                    "price" => query.OrderBy(p => p.DiscountPrice ?? p.Price),
                     "price_desc" => query.OrderByDescending(p => p.DiscountPrice ?? p.Price),
                     "newest" => query.OrderByDescending(p => p.CreatedAt),
                     "popular" => query.OrderByDescending(p => p.ViewCount),
                     "discount" => query.Where(p => p.DiscountPrice.HasValue && p.DiscountPrice.Value > 0)
-                                      .OrderByDescending(p => ((p.Price - p.DiscountPrice!.Value) / p.Price) * 100), // İndirim yüzdesi
+                                      .OrderByDescending(p => ((p.Price - p.DiscountPrice!.Value) / p.Price) * 100),
                     "name" => query.OrderBy(p => p.Name),
                     "name_desc" => query.OrderByDescending(p => p.Name),
                     _ => query.OrderBy(p => p.Name)
