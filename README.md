@@ -12,7 +12,7 @@ Scarwey is a robust, end-to-end e-commerce application designed with a focus on 
 ## 🛠️ Tech Stack
 - **Frontend:** React.js, JavaScript (ES6+), CSS3.
 - **Backend:** Node.js, Express.js.
-- **Database:** MongoDB (veya kullandığın DB ismi) - RESTful API Architecture.
+- **Database:** PostgreSQL - RESTful API Architecture.
 - **Cloud & Media:** Cloudinary API.
 - **Deployment:** - **Frontend:** Hosted on **Vercel**.
   - **Backend:** Deployed on **Render**.
@@ -21,9 +21,3 @@ Scarwey is a robust, end-to-end e-commerce application designed with a focus on 
 - `/client`: React components, hooks, and state management.
 - `/server`: Express routes, controllers, and database schemas.
 - `/assets`: Static resources and global styling.
-
-## 📦 Installation & Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/NurSima1471/Scarwey.git](https://github.com/NurSima1471/Scarwey.git)
